@@ -22,4 +22,4 @@ RUN chmod +x /app/entrypoint.sh
 EXPOSE 8000
 
 # По умолчанию запускаем наш скрипт-«точку входа»
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["sh", "/app/entrypoint.sh"]
