@@ -5,9 +5,26 @@ services:
     image: postgres:14
     container_name: specs_postgres
     env_file:
-      - ./postgres/.env
+      - ./postgres/.env       # ваши POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
     volumes:
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "5432:5432"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: specs_web
+    command: # (определяется в entrypoint.sh)
+    volumes:
+      - .:/app             # монтируем весь проект, чтобы при изменении кода контейнер видел правки
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env               # сюда можно вынести DJANGO_SECRET_KEY, DEBUG, ALLOWED_HOSTS, и т. д.
+      - ./postgres/.env    # чтобы web-контейнер знал, как подключаться к БД
+    depends_on:
+      - db
     restart: unless-stopped
