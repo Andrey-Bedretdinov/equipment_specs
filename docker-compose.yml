@@ -17,7 +17,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: specs_web
-    command: # (определяется в entrypoint.sh)
+    command: sh /app/entrypoint.sh
     volumes:
       - .:/app             # монтируем весь проект, чтобы при изменении кода контейнер видел правки
     ports:

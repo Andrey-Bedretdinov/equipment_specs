@@ -6,6 +6,8 @@
 # sleep 5
 
 # Применяем миграции
+python manage.py makemigrations --noinput
+
 python manage.py migrate --noinput
 bash create_superuser.sh
 
