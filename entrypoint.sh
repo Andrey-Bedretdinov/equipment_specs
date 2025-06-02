@@ -7,6 +7,7 @@
 
 # Применяем миграции
 python manage.py migrate --noinput
+bash create_superuser.sh
 
 # Если нужно собрать статику (опционально)
 # python manage.py collectstatic --noinput
