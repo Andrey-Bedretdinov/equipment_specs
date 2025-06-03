@@ -10,3 +10,11 @@
 .projectDescription {
   margin-top: 16px;
 }
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+

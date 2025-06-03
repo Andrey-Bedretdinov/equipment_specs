@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Typography, Space } from 'antd';
+import { Card, Typography, Space, Button } from 'antd';
 import type { ProjectNode } from '../../types/types';
 import KtcBlock from '../KtsBlock/KtsBlock';
 import styles from './ProjectTree.module.css';
@@ -21,7 +21,11 @@ const ProjectTree: React.FC<ProjectTreeProps> = ({ data }) => {
                 >
                     <Text>{project.description}</Text>
                     <div className={styles.projectDescription}>
-                        <Title level={4}>КТС:</Title>
+                        <div className={styles.sectionHeader}>
+                            <Title level={4}>КТС:</Title>
+                            <Button>Добавить</Button>
+                        </div>
+
                         <Space direction="vertical" style={{ width: '100%' }}>
                             {project.kts.map((ktc) => <KtcBlock key={ktc.id} ktc={ktc} />)}
                         </Space>

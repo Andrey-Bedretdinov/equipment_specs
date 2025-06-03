@@ -29,7 +29,10 @@ const KtcBlock: React.FC<{ ktc: KtcNode }> = ({ ktc }) => {
 
             {expanded && (
                 <div className={styles.children}>
-                    <Title level={4}>Units:</Title>
+                    <div className={styles.sectionHeader}>
+                        <Title level={4}>Units:</Title>
+                        <Button>Добавить</Button>
+                    </div>
                     <Space direction="vertical" className={styles.children}>
                         {ktc.untis.map((unit) => (
                             <UnitBlock key={unit.id} unit={unit} />

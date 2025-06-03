@@ -29,7 +29,10 @@ const UnitBlock: React.FC<{ unit: UnitNode }> = ({ unit }) => {
 
             {expanded && (
                 <div className={styles.children}>
-                    <Title level={5}>Items:</Title>
+                    <div className={styles.sectionHeader}>
+                        <Title level={5}>Items:</Title>
+                        <Button>Добавить</Button>
+                    </div>
                     <Space direction="vertical" className={styles.children}>
                         {unit.items.map((item) => <ItemCard key={item.id} item={item} />)}
                     </Space>

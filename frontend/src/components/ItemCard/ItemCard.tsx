@@ -1,12 +1,11 @@
 import { Card, Typography } from 'antd';
-import { levelColors } from "../../constants/colors";
 import type { ItemNode } from "../../types/types";
 import styles from './ItemCard.module.css';
 
 const { Text } = Typography;
 
 const ItemCard: React.FC<{ item: ItemNode }> = ({ item }) => (
-    <Card size="small" className={styles.card} style={{ backgroundColor: levelColors[3] }}>
+    <Card size="small" className={styles.card}>
         <Text strong>{item.name}</Text> — <Text>{item.description}</Text>
         <div><Text type="secondary">Каталог:</Text> {item.catalog_code}</div>
         <div><Text type="secondary">Поставщик:</Text> {item.supplier}</div>
