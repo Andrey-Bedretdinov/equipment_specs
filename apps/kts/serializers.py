@@ -1,17 +1,19 @@
 from rest_framework import serializers
 
-from .models import KTS
+from .models import ProjectKTS
 
 
-class KTSSerializer(serializers.ModelSerializer):
+class ProjectKTSSerializer(serializers.ModelSerializer):
     """
-    Комплекс технических средств (КТС) — часть проекта.
+    Сериализатор для КТС проекта.
+
+    Позволяет управлять привязкой КТС из справочника к проекту.
     """
 
     class Meta:
-        model = KTS
-        fields = ['id', 'name', 'project']
+        model = ProjectKTS
+        fields = ['id', 'project', 'catalog_kts']
         extra_kwargs = {
-            'name': {'help_text': 'Название КТС'},
-            'project': {'help_text': 'ID проекта, к которому принадлежит КТС'}
+            'project': {'help_text': 'ID проекта'},
+            'catalog_kts': {'help_text': 'ID КТС из справочника'}
         }

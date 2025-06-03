@@ -1,13 +1,8 @@
-from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from .views import ItemViewSet
+from .views import ProjectItemViewSet
 
 router = DefaultRouter()
-router.register(r'items', ItemViewSet, basename='item-detail')  # для операций с конкретным изделием
+router.register(r'items', ProjectItemViewSet, basename='items')
 
-urlpatterns = [
-    path('units/<int:unit_id>/items/', ItemViewSet.as_view({'post': 'create', 'get': 'list'}), name='unit-items'),
-]
-
-urlpatterns += router.urls
+urlpatterns = router.urls

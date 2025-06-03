@@ -1,40 +1,36 @@
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import viewsets
-from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
-from apps.kts.models import KTS
-from .models import Unit
-from .serializers import UnitSerializer
+from apps.units.models import ProjectUnit
+from apps.units.serializers import ProjectUnitSerializer
 
 
 @extend_schema_view(
-    list=extend_schema(description="Получить список комплектных единиц для КТС."),
-    retrieve=extend_schema(description="Получить детали комплектной единицы."),
-    create=extend_schema(description="Создать комплектную единицу для КТС."),
-    update=extend_schema(description="Обновить комплектную единицу."),
-    destroy=extend_schema(description="Удалить комплектную единицу."),
+    list=extend_schema(summary="Список комплектных единиц проекта"),
+    retrieve=extend_schema(summary="Детали комплектной единицы"),
+    create=extend_schema(summary="Создать комплектную единицу"),
+    update=extend_schema(summary="Обновить комплектную единицу"),
+    partial_update=extend_schema(summary="Частичное обновление комплектной единицы"),
+    destroy=extend_schema(summary="Удалить комплектную единицу"),
 )
-class UnitViewSet(viewsets.ModelViewSet):
+class ProjectUnitViewSet(viewsets.ModelViewSet):
     """
-    Управление комплектными единицами в рамках КТС.
+    Управление комплектными единицами в рамках проектного КТС.
     """
-    queryset = Unit.objects.all()
-    serializer_class = UnitSerializer
+
+    serializer_class = ProjectUnitSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if 'kts_pk' in self.kwargs:
-            return self.queryset.filter(kts_id=self.kwargs['kts_pk'])
-        return super().get_queryset()
+        project_kts_id = self.kwargs.get('project_kts_pk')
+        if project_kts_id:
+            return ProjectUnit.objects.filter(project_kts_id=project_kts_id)
+        return ProjectUnit.objects.all()
 
     def perform_create(self, serializer):
-        kts_id = self.kwargs.get('kts_pk')
-        if kts_id:
-            try:
-                kts = KTS.objects.get(pk=kts_id)
-            except KTS.DoesNotExist:
-                raise NotFound('KTS not found')
-            serializer.save(kts=kts)
-        else:
-            raise ValidationError('KTS id is required')
+        project_kts_id = self.kwargs.get('project_kts_pk')
+        if not project_kts_id:
+            raise ValidationError({'detail': 'project_kts_pk is required in the URL.'})
+        serializer.save(project_kts_id=project_kts_id)

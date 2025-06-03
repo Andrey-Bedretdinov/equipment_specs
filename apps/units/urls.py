@@ -1,13 +1,7 @@
-from django.urls import path
 from rest_framework.routers import DefaultRouter
-
-from .views import UnitViewSet
+from .views import ProjectUnitViewSet
 
 router = DefaultRouter()
-router.register(r'units', UnitViewSet, basename='unit-detail')  # для операций с конкретной комплектной единицей
+router.register(r'units', ProjectUnitViewSet, basename='units')
 
-urlpatterns = [
-    path('kts/<int:kts_id>/units/', UnitViewSet.as_view({'post': 'create', 'get': 'list'}), name='kts-units'),
-]
-
-urlpatterns += router.urls
+urlpatterns = router.urls

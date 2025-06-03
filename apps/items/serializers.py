@@ -1,26 +1,38 @@
+from apps.catalog.serializers import CatalogItemSerializer
 from rest_framework import serializers
-from .models import Item
+
+from .models import ProjectItem
 
 
-class ItemSerializer(serializers.ModelSerializer):
+class ProjectItemSerializer(serializers.ModelSerializer):
     """
-    Изделие — элемент комплектной единицы.
+    Сериализатор для проектного изделия.
+
+    Показывает информацию о выбранном изделии из справочника и количестве в проекте.
     """
+
+    catalog_item = CatalogItemSerializer(read_only=True)
+    catalog_item_id = serializers.PrimaryKeyRelatedField(
+        queryset=ProjectItem._meta.get_field('catalog_item').remote_field.model.objects.all(),
+        source='catalog_item',
+        write_only=True,
+        help_text='ID изделия из справочника'
+    )
 
     class Meta:
-        model = Item
+        model = ProjectItem
         fields = [
-            'id', 'unit', 'name', 'supplier', 'catalog_code',
-            'quantity', 'price', 'manufacturer', 'currency', 'delivery_type'
+            'id',
+            'project_unit',
+            'catalog_item',
+            'catalog_item_id',
+            'quantity',
         ]
         extra_kwargs = {
-            'unit': {'help_text': 'ID комплектной единицы, к которой относится изделие'},
-            'name': {'help_text': 'Название изделия'},
-            'supplier': {'help_text': 'Поставщик изделия'},
-            'catalog_code': {'help_text': 'Каталожный номер изделия'},
-            'quantity': {'help_text': 'Количество изделий'},
-            'price': {'help_text': 'Цена за единицу'},
-            'manufacturer': {'help_text': 'Производитель изделия'},
-            'currency': {'help_text': 'Валюта цены'},
-            'delivery_type': {'help_text': 'Тип поставки'}
+            'project_unit': {
+                'help_text': 'ID комплектной единицы проекта',
+            },
+            'quantity': {
+                'help_text': 'Количество изделий в проекте',
+            }
         }

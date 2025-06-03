@@ -1,40 +1,36 @@
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import viewsets
-from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
-from apps.projects.models import Project
-from .models import KTS
-from .serializers import KTSSerializer
+from .models import ProjectKTS
+from .serializers import ProjectKTSSerializer
 
 
 @extend_schema_view(
-    list=extend_schema(description="Получить список всех КТС проекта."),
-    retrieve=extend_schema(description="Получить детали КТС."),
-    create=extend_schema(description="Создать новый КТС для проекта."),
-    update=extend_schema(description="Обновить КТС."),
-    destroy=extend_schema(description="Удалить КТС."),
+    list=extend_schema(summary="Список КТС проекта"),
+    retrieve=extend_schema(summary="Детали КТС проекта"),
+    create=extend_schema(summary="Добавить КТС к проекту"),
+    update=extend_schema(summary="Обновить КТС проекта"),
+    partial_update=extend_schema(summary="Частичное обновление КТС проекта"),
+    destroy=extend_schema(summary="Удалить КТС проекта"),
 )
-class KTSViewSet(viewsets.ModelViewSet):
+class ProjectKTSViewSet(viewsets.ModelViewSet):
     """
-    Управление комплексами технических средств (КТС).
+    ViewSet для управления КТС в рамках проекта.
     """
-    queryset = KTS.objects.all()
-    serializer_class = KTSSerializer
+
+    serializer_class = ProjectKTSSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if 'project_pk' in self.kwargs:
-            return self.queryset.filter(project_id=self.kwargs['project_pk'])
-        return super().get_queryset()
+        project_id = self.kwargs.get('project_pk')
+        if project_id:
+            return ProjectKTS.objects.filter(project_id=project_id)
+        return ProjectKTS.objects.all()
 
     def perform_create(self, serializer):
         project_id = self.kwargs.get('project_pk')
-        if project_id:
-            try:
-                project = Project.objects.get(pk=project_id)
-            except Project.DoesNotExist:
-                raise NotFound('Project not found')
-            serializer.save(project=project)
-        else:
-            raise ValidationError('Project id is required')
+        if not project_id:
+            raise ValidationError({'detail': 'project_pk is required in the URL.'})
+        serializer.save(project_id=project_id)

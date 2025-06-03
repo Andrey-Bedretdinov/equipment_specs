@@ -1,18 +1,37 @@
+from apps.catalog.models import CatalogItem
 from django.db import models
+from apps.units.models import ProjectUnit
 
-from apps.units.models import Unit
 
+class ProjectItem(models.Model):
+    """
+    Проектное изделие.
 
-class Item(models.Model):
-    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='items')
-    name = models.CharField(max_length=255)
-    supplier = models.CharField(max_length=255)
-    catalog_code = models.CharField(max_length=255)
-    quantity = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=12, decimal_places=2)
-    manufacturer = models.CharField(max_length=255)
-    currency = models.CharField(max_length=10)
-    delivery_type = models.CharField(max_length=255)
+    Представляет собой привязку изделия из справочника (CatalogItem)
+    к конкретной комплектной единице проекта (ProjectUnit) с указанием количества.
+    """
+
+    project_unit = models.ForeignKey(
+        ProjectUnit,
+        on_delete=models.CASCADE,
+        related_name='project_items',
+        verbose_name='Комплектная единица проекта'
+    )
+    catalog_item = models.ForeignKey(
+        CatalogItem,
+        on_delete=models.PROTECT,
+        related_name='used_in_projects',
+        verbose_name='Изделие из справочника'
+    )
+    quantity = models.PositiveIntegerField(
+        verbose_name='Количество',
+        help_text='Количество изделий в проектной спецификации'
+    )
+
+    class Meta:
+        verbose_name = 'Проектное изделие'
+        verbose_name_plural = 'Проектные изделия'
+        ordering = ['id']
 
     def __str__(self):
-        return f"{self.name} ({self.quantity} шт.)"
+        return f"{self.catalog_item.name} (x{self.quantity})"
