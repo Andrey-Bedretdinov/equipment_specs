@@ -5,11 +5,13 @@
 # Здесь можно просто дать задержку, либо использовать подходящий блок попыток.
 sleep 5
 
+bash create_superuser.sh
+
 # Применяем миграции
 python manage.py makemigrations --noinput
 
 python manage.py migrate --noinput
-bash create_superuser.sh
+
 
 # Если нужно собрать статику (опционально)
 # python manage.py collectstatic --noinput
