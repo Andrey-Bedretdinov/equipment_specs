@@ -7,12 +7,6 @@ sleep 5
 
 bash create_superuser.sh
 
-# Применяем миграции
-python manage.py makemigrations --noinput
-
-python manage.py migrate --noinput
-
-
 # Если нужно собрать статику (опционально)
 # python manage.py collectstatic --noinput
 
