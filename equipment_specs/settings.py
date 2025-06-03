@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'apps.items',
     'drf_spectacular_sidecar',
     'corsheaders',
+    'rest_framework',
 ]
 
 REST_FRAMEWORK = {
