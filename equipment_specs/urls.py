@@ -35,6 +35,11 @@ catalog_router.register(r'catalog/kts', CatalogKTSViewSet, basename='catalog-kts
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # сначала подрубаем отдельные пути проектов
+    path('api/', include('apps.projects.urls')),
+
+    # потом все router-based ViewSets
     path('api/', include(router.urls)),
     path('api/', include(projects_router.urls)),
     path('api/', include(kts_router.urls)),
