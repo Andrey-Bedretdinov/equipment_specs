@@ -1,0 +1,15 @@
+.card {
+  margin-bottom: 16px;
+  background-color: var(--unit-color);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.children {
+  margin-top: 12px;
+  width: 100%;
+}

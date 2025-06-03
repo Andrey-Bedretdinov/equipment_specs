@@ -1,0 +1,12 @@
+.wrapper {
+  width: 100%;
+}
+
+.projectCard {
+  background-color: var(--project-color);
+  margin-bottom: 32px;
+}
+
+.projectDescription {
+  margin-top: 16px;
+}

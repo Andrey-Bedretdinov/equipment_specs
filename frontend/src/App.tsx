@@ -1,11 +1,12 @@
 import './App.css'
-import SpecTree from './components/SpecTree/SpecTree'
+import ProjectTree from './components/ProjectTree/ProjectTree'
+import { projectsData } from './constants/projectsData'
 
 function App() {
 
     return (
         <>
-            <SpecTree/>
+            <ProjectTree data={projectsData}/>
         </>
     )
 }
