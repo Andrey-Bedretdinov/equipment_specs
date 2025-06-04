@@ -1,13 +1,16 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { api } from './services/projectsApi'
+import { projectsApi } from './services/projectsApi'
+import { catalogApi } from './services/catalogApi'
 
 export const store = configureStore({
   reducer: {
-    [api.reducerPath]: api.reducer,
+    [projectsApi.reducerPath]: projectsApi.reducer,
+    [catalogApi.reducerPath]: catalogApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
-      .concat(api.middleware)
+      .concat(projectsApi.middleware)
+      .concat(catalogApi.middleware)
 })
 
 export type RootState = ReturnType<typeof store.getState>
