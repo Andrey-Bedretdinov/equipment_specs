@@ -39,9 +39,6 @@ INSTALLED_APPS = [
     'django_extensions',
     'drf_spectacular',
     'apps.projects',
-    'apps.kts',
-    'apps.units',
-    'apps.items',
     'apps.catalog',
     'drf_spectacular_sidecar',
     'corsheaders',
@@ -117,7 +114,7 @@ DATABASES = {
         "NAME": os.getenv("POSTGRES_DB", "specs_db"),
         "USER": os.getenv("POSTGRES_USER", "specs_user"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "specs_pass"),
-        "HOST": os.getenv("POSTGRES_HOST", "db"),
+        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
 }

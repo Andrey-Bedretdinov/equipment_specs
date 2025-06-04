@@ -1,58 +1,50 @@
+from apps.catalog.serializers import CatalogItemSerializer, CatalogUnitSerializer, CatalogKTSSerializer
 from rest_framework import serializers
 
-from apps.catalog.serializers import CatalogKTSSerializer
-from .models import Project, ProjectKTS
+from .models import Project, ProjectKTS, ProjectUnit, ProjectItem
 
 
-class ProjectSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для проекта.
-
-    Представляет базовую информацию о проекте.
-    """
-    created_by = serializers.ReadOnlyField(source='created_by.id')
+class ProjectItemSerializer(serializers.ModelSerializer):
+    item = CatalogItemSerializer(read_only=True)
 
     class Meta:
-        model = Project
-        fields = [
-            'id',
-            'name',
-            'description',
-            'created_by',
-            'created_at'
-        ]
-        extra_kwargs = {
-            'name': {'help_text': 'Название проекта'},
-            'description': {'help_text': 'Описание проекта'},
-            'created_by': {'help_text': 'ID пользователя, создавшего проект'},
-            'created_at': {'help_text': 'Дата и время создания проекта'}
-        }
+        model = ProjectItem
+        fields = ['id', 'item', 'quantity']
+
+
+class ProjectUnitSerializer(serializers.ModelSerializer):
+    unit = CatalogUnitSerializer(read_only=True)
+
+    class Meta:
+        model = ProjectUnit
+        fields = ['id', 'unit', 'quantity']
 
 
 class ProjectKTSSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для КТС, привязанных к проекту.
-
-    Позволяет видеть, какие КТС выбраны для данного проекта.
-    """
-    catalog_kts = CatalogKTSSerializer(read_only=True)
-    catalog_kts_id = serializers.PrimaryKeyRelatedField(
-        queryset=ProjectKTS.objects.all(),
-        source='catalog_kts',
-        write_only=True,
-        help_text="ID КТС из справочника, которое будет добавлено в проект"
-    )
+    kts = CatalogKTSSerializer(read_only=True)
 
     class Meta:
         model = ProjectKTS
-        fields = [
-            'id',
-            'project',
-            'catalog_kts',
-            'catalog_kts_id'
-        ]
-        extra_kwargs = {
-            'project': {'help_text': 'ID проекта'},
-            'catalog_kts': {'help_text': 'Детали КТС из справочника', 'read_only': True},
-            'catalog_kts_id': {'write_only': True}
-        }
+        fields = ['id', 'kts', 'quantity']
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    kts_list = serializers.SerializerMethodField()
+    units_list = serializers.SerializerMethodField()
+    items_list = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project
+        fields = ['id', 'name', 'description', 'kts_list', 'units_list', 'items_list']
+
+    def get_kts_list(self, obj):
+        kts = ProjectKTS.objects.filter(project=obj)
+        return ProjectKTSSerializer(kts, many=True).data
+
+    def get_units_list(self, obj):
+        units = ProjectUnit.objects.filter(project=obj)
+        return ProjectUnitSerializer(units, many=True).data
+
+    def get_items_list(self, obj):
+        items = ProjectItem.objects.filter(project=obj)
+        return ProjectItemSerializer(items, many=True).data
