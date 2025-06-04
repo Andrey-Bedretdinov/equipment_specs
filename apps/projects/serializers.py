@@ -24,9 +24,9 @@ class UnitWithItemsSerializer(serializers.Serializer):
     name = serializers.CharField(source='unit.name')
     description = serializers.CharField(source='unit.description')
     quantity = serializers.IntegerField()
-    items = serializers.SerializerMethodField()
+    items_list = serializers.SerializerMethodField()  # <-- ПРАВИЛЬНО
 
-    def get_items(self, obj):
+    def get_items_list(self, obj):  # <-- И метод тоже переименовать!
         unit_items = CatalogUnitItem.objects.filter(unit=obj.unit)
         return [
             {
@@ -47,14 +47,14 @@ class UnitWithItemsSerializer(serializers.Serializer):
 
 # ктс с юнитами и изделиями
 class KTSWithUnitsItemsSerializer(serializers.Serializer):
-    id = serializers.IntegerField(source='kts.id')  # <-- поправить доступ
+    id = serializers.IntegerField(source='kts.id')
     name = serializers.CharField(source='kts.name')
     description = serializers.CharField(source='kts.description')
     quantity = serializers.IntegerField()
-    units = serializers.SerializerMethodField()
-    items = serializers.SerializerMethodField()
+    units_list = serializers.SerializerMethodField()
+    items_list = serializers.SerializerMethodField()
 
-    def get_units(self, obj):
+    def get_units_list(self, obj):
         kts_units = CatalogKTSUnit.objects.filter(kts=obj.kts)
         return [
             {
@@ -62,7 +62,7 @@ class KTSWithUnitsItemsSerializer(serializers.Serializer):
                 "name": unit.unit.name,
                 "description": unit.unit.description,
                 "quantity": unit.quantity,
-                "items": [
+                "items_list": [
                     {
                         "id": item.item.id,
                         "name": item.item.name,
@@ -81,7 +81,7 @@ class KTSWithUnitsItemsSerializer(serializers.Serializer):
             for unit in kts_units
         ]
 
-    def get_items(self, obj):
+    def get_items_list(self, obj):
         kts_items = CatalogKTSItem.objects.filter(kts=obj.kts)
         return [
             {
