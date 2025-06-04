@@ -1,19 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { projectsApi } from './services/projectsApi'
-import { itemsApi } from './services/itemsApi'
-import { ktsApi } from './services/ktsApi'
+import { api } from './services/projectsApi'
 
 export const store = configureStore({
   reducer: {
-    [projectsApi.reducerPath]: projectsApi.reducer,
-    [ktsApi.reducerPath]: ktsApi.reducer,
-    [itemsApi.reducerPath]: itemsApi.reducer,
+    [api.reducerPath]: api.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
-      .concat(projectsApi.middleware)
-      .concat(itemsApi.middleware)
-      .concat(ktsApi.middleware),
+      .concat(api.middleware)
 })
 
 export type RootState = ReturnType<typeof store.getState>

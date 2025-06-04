@@ -1,48 +1,32 @@
-export type SpecNodeType = 'project' | 'ktc' | 'unit' | 'item'
-
-export interface BaseNode {
+interface INode {
   id: number;
   name: string;
   description: string;
+  price: string;
 }
 
-export interface ItemNode extends BaseNode {
-  supplier: string
-  catalog_code: string
-  price: number
-  currency: string
-  manufacturer: string
-  deliveryType: string
-  quantity: number
-}
-
-export interface UnitNode extends BaseNode {
-  items: ItemNode[]
+export interface IItem extends INode {
+  supplier: string;
+  catalog_code: string;
+  currency: string;
+  manufactured: string;
+  delivery_type: string;
   quantity: number;
 }
 
-export interface KtcNode extends BaseNode {
-  untis: UnitNode[]
+export interface IUnit extends INode {
+  items_list?: IItem[];
   quantity: number;
 }
 
-export interface ProjectNode extends BaseNode {
-  kts: KtcNode[]
+export interface IKts extends INode {
+  units_list?: IUnit[];
+  items_list?: IItem[];
+  quantity: number;
 }
 
-export type SpecNode = ProjectNode | KtcNode | UnitNode | ItemNode
-
-
-// ТИПЫ ДЛЯ ПОДХОДА С КАРТОЧКАМИ
-
-export interface IProject {
-  id: number;
-  name: string;
-  description: string;
-}
-
-export interface IProjectKtsLink {
-  id: number;
-  project: number;
-  catalog_kts: number;
+export interface IProject extends INode {
+  kts_list?: IKts[];
+  units_list?: IUnit[];
+  items_list?: IItem[];
 }
