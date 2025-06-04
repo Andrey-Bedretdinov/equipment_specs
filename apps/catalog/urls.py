@@ -9,7 +9,10 @@ router.register(r'catalog/items', CatalogItemViewSet, basename='catalog-items')
 router.register(r'catalog/units', CatalogUnitViewSet, basename='catalog-units')
 router.register(r'catalog/kts', CatalogKTSViewSet, basename='catalog-kts')
 
-urlpatterns = router.urls + [  # <-- Сначала роутер!
+urlpatterns = router.urls  # <--- СНАЧАЛА роутер
+
+# А потом твои APIView в другом месте
+urlpatterns += [
     path('catalog/items/edit/', CatalogItemAPIView.as_view(), name='catalog-item-edit'),
     path('catalog/units/edit/', CatalogUnitAPIView.as_view(), name='catalog-unit-edit'),
     path('catalog/kts/edit/', CatalogKTSAPIView.as_view(), name='catalog-kts-edit'),
