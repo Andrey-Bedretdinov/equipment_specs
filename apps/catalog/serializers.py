@@ -133,6 +133,23 @@ class CatalogUnitCreateUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
+class AddItemsToUnitSerializer(serializers.Serializer):
+    id = serializers.IntegerField()  # ID юнита
+    items = serializers.ListField(
+        child=serializers.DictField(
+            child=serializers.IntegerField(),
+        )
+    )
+
+    def validate_items(self, value):
+        if not value:
+            raise serializers.ValidationError("Список изделий не может быть пустым.")
+        for item in value:
+            if "id" not in item:
+                raise serializers.ValidationError("У каждого изделия должен быть 'id'.")
+        return value
+
+
 # ————— Юнит внутри КТС —————
 
 class CatalogKTSUnitSerializer(serializers.Serializer):

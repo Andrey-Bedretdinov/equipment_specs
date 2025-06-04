@@ -1,12 +1,14 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
-from .models import CatalogItem, CatalogUnit, CatalogKTS
+from .models import CatalogItem, CatalogUnit, CatalogKTS, CatalogUnitItem
 from .serializers import (
     CatalogItemSerializer, CatalogItemCreateSerializer,
     CatalogUnitSerializer,
-    CatalogKTSSerializer, CatalogUnitCreateUpdateSerializer,
+    CatalogKTSSerializer, CatalogUnitCreateUpdateSerializer, AddItemsToUnitSerializer, CatalogUnitItemSerializer,
 )
 
 
@@ -65,6 +67,46 @@ class CatalogUnitViewSet(viewsets.ModelViewSet):
         if self.action in ['create']:
             return CatalogUnitCreateUpdateSerializer
         return CatalogUnitSerializer
+
+    @extend_schema(
+        request=AddItemsToUnitSerializer,
+        responses={201: CatalogUnitItemSerializer(many=True)},
+        summary="Добавить изделия в юнит",
+        description="Добавляет новые изделия в юнит по ID юнита и списку изделий с количеством."
+    )
+    @action(detail=False, methods=['post'], url_path='add-items')
+    def add_items(self, request):
+        serializer = AddItemsToUnitSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        unit_id = serializer.validated_data['id']
+        items_data = serializer.validated_data['items']
+
+        # Проверка, существует ли юнит
+        try:
+            unit = CatalogUnit.objects.get(id=unit_id)
+        except CatalogUnit.DoesNotExist:
+            return Response({"error": "Юнит не найден."}, status=status.HTTP_404_NOT_FOUND)
+
+        created_items = []
+        for item_data in items_data:
+            item_id = item_data['id']
+            quantity = item_data.get('quantity', 1)
+
+            try:
+                item = CatalogItem.objects.get(id=item_id)
+            except CatalogItem.DoesNotExist:
+                return Response({"error": f"Изделие с id {item_id} не найдено."}, status=status.HTTP_404_NOT_FOUND)
+
+            unit_item = CatalogUnitItem.objects.create(
+                unit=unit,
+                item=item,
+                quantity=quantity
+            )
+            created_items.append(unit_item)
+
+        # Возвращаем созданные связи
+        return Response(CatalogUnitItemSerializer(created_items, many=True).data, status=status.HTTP_201_CREATED)
 
 
 @extend_schema_view(
