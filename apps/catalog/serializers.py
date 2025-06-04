@@ -31,32 +31,6 @@ class CatalogItemSerializer(serializers.ModelSerializer):
         ]
 
 
-class CatalogItemCreateUpdateSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для создания и редактирования изделия.
-
-    Используется для POST (создание) и PATCH (обновление).
-
-    Поля:
-    - name: наименование изделия
-    - description: описание изделия
-    - supplier: поставщик
-    - catalog_code: артикул
-    - price: цена
-    - currency: валюта
-    - manufactured: производитель
-    - delivery_type: тип поставки
-    """
-
-    class Meta:
-        model = CatalogItem
-        fields = [
-            'id', 'name', 'description', 'supplier', 'catalog_code',
-            'price', 'currency', 'manufactured', 'delivery_type'
-        ]
-        read_only_fields = ['id']
-
-
 # ————— Изделия внутри юнита —————
 
 class CatalogUnitItemSerializer(serializers.Serializer):
@@ -91,22 +65,6 @@ class CatalogUnitItemSerializer(serializers.Serializer):
         return f"{total_price:.2f}"
 
 
-class CatalogUnitItemCreateUpdateSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для создания и редактирования изделия в юните.
-
-    Поля:
-    - unit: ID юнита
-    - item: ID изделия
-    - quantity: количество изделий
-    """
-
-    class Meta:
-        model = CatalogUnitItem
-        fields = ['id', 'unit', 'item', 'quantity']
-        read_only_fields = ['id']
-
-
 # ————— Юнит с изделиями —————
 
 class CatalogUnitSerializer(serializers.ModelSerializer):
@@ -124,7 +82,7 @@ class CatalogUnitSerializer(serializers.ModelSerializer):
     items_list = serializers.SerializerMethodField()
 
     class Meta:
-        model = CatalogUnit  # тут правильно
+        model = CatalogUnit
         fields = ['id', 'name', 'description', 'price', 'items_list']
 
     def get_items_list(self, obj):
@@ -137,20 +95,7 @@ class CatalogUnitSerializer(serializers.ModelSerializer):
         return f"{total:.2f}"
 
 
-class CatalogUnitCreateUpdateSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для создания и редактирования юнита.
-
-    Поля:
-    - name: наименование юнита
-    - description: описание
-    """
-
-    class Meta:
-        model = CatalogUnit
-        fields = ['id', 'name', 'description']
-        read_only_fields = ['id']
-
+# ————— Юнит внутри КТС —————
 
 class CatalogKTSUnitSerializer(serializers.Serializer):
     id = serializers.IntegerField(source='unit.id')
@@ -205,22 +150,6 @@ class CatalogKTSItemSerializer(serializers.Serializer):
         return f"{total_price:.2f}"
 
 
-class CatalogKTSItemCreateUpdateSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для создания и редактирования изделия внутри КТС.
-
-    Поля:
-    - kts: ID КТС
-    - item: ID изделия
-    - quantity: количество изделий
-    """
-
-    class Meta:
-        model = CatalogKTSItem
-        fields = ['id', 'kts', 'item', 'quantity']
-        read_only_fields = ['id']
-
-
 # ————— КТС с юнитами и изделиями —————
 
 class CatalogKTSSerializer(serializers.ModelSerializer):
@@ -266,18 +195,3 @@ class CatalogKTSSerializer(serializers.ModelSerializer):
         total += sum(Decimal(item.item.price) * item.quantity for item in kts_items)
 
         return f"{total:.2f}"
-
-
-class CatalogKTSCreateUpdateSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для создания и редактирования КТС.
-
-    Поля:
-    - name: наименование КТС
-    - description: описание КТС
-    """
-
-    class Meta:
-        model = CatalogKTS
-        fields = ['id', 'name', 'description']
-        read_only_fields = ['id']
