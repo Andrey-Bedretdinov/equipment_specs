@@ -5,8 +5,8 @@ from .views import ProjectViewSet, ProjectShortListView
 router = DefaultRouter()
 router.register(r'projects', ProjectViewSet, basename='projects')
 
-urlpatterns = router.urls
-
-urlpatterns += [
+urlpatterns = [
     path('projects/short/', ProjectShortListView.as_view(), name='projects-short-list'),
 ]
+
+urlpatterns += router.urls
