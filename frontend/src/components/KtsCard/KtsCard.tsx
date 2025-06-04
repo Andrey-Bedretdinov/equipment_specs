@@ -11,7 +11,7 @@ interface KtsCardProps {
 }
 const KtsCard: React.FC<KtsCardProps> = ({ kts }) => {
 
-    const [collapsed, setCollapsed] = useState<boolean>(false);
+    const [collapsed, setCollapsed] = useState<boolean>(true);
 
     const toggleCollapse = () => {
         setCollapsed(prev => !prev);
