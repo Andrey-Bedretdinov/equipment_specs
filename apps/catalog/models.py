@@ -42,6 +42,9 @@ class CatalogUnitItem(models.Model):
     class Meta:
         verbose_name = 'Изделие в юните'
         verbose_name_plural = 'Изделия в юните'
+        constraints = [
+            models.UniqueConstraint(fields=['unit', 'item'], name='unique_unit_item')
+        ]
 
 
 class CatalogKTS(models.Model):
