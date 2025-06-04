@@ -31,7 +31,7 @@ const KtsCard: React.FC<KtsCardProps> = ({ kts }) => {
                     <div>
                         <Title level={2}>{kts.name}</Title>
                         <Text>{kts.description}</Text><br/>
-                        <Text strong>Итоговая стоимость: {kts.price} ₽</Text>
+                        <Text strong>Итоговая стоимость: {kts.price} RUB</Text>
                     </div>
                 </div>
             }

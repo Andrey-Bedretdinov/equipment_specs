@@ -29,7 +29,7 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit }) => {
                     <div>
                         <Title level={3}>{unit.name}</Title>
                         <Text>{unit.name}</Text><br/>
-                        <Text strong>Итоговая стоимость: {unit.price} ₽</Text>
+                        <Text strong>Итоговая стоимость: {unit.price} RUB</Text>
                     </div>
                 </div>
             }

@@ -30,3 +30,15 @@ export interface IProject extends INode {
   units_list?: IUnit[];
   items_list?: IItem[];
 }
+
+// Интерфейсы для ручек создания
+export interface IItemCreate {
+  name: string;
+  description: string;
+  supplier: string;
+  catalog_code: string;
+  price: string;
+  currency: string;
+  manufactured: string;
+  delivery_type: string;
+}

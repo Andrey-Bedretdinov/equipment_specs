@@ -61,7 +61,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
                         {item.delivery_type}
                     </Descriptions.Item>
                     <Descriptions.Item label="Количество">
-                        {item.quantity}
+                        {item.quantity || 1}
                     </Descriptions.Item>
                 </Descriptions>
             )}
