@@ -117,30 +117,24 @@ class CatalogUnitSerializer(serializers.ModelSerializer):
     - id: идентификатор юнита
     - name: наименование юнита
     - description: описание юнита
-    - quantity: количество юнитов
-    - price: общая цена юнита (цена всех изделий * количество юнитов)
+    - price: общая цена юнита (цена всех изделий)
     - items_list: список изделий внутри юнита
     """
-    id = serializers.IntegerField(source='unit.id')
-    name = serializers.CharField(source='unit.name')
-    description = serializers.CharField(source='unit.description')
-    quantity = serializers.IntegerField()
     price = serializers.SerializerMethodField()
     items_list = serializers.SerializerMethodField()
 
     class Meta:
-        model = CatalogKTSUnit  # через связь KTSUnit
-        fields = ['id', 'name', 'description', 'quantity', 'price', 'items_list']
+        model = CatalogUnit  # тут правильно
+        fields = ['id', 'name', 'description', 'price', 'items_list']
 
     def get_items_list(self, obj):
-        unit_items = CatalogUnitItem.objects.filter(unit=obj.unit)
+        unit_items = CatalogUnitItem.objects.filter(unit=obj)
         return CatalogUnitItemSerializer(unit_items, many=True).data
 
     def get_price(self, obj):
-        unit_items = CatalogUnitItem.objects.filter(unit=obj.unit)
+        unit_items = CatalogUnitItem.objects.filter(unit=obj)
         total = sum(Decimal(item.item.price) * item.quantity for item in unit_items)
-        final_price = total * obj.quantity
-        return f"{final_price:.2f}"
+        return f"{total:.2f}"
 
 
 class CatalogUnitCreateUpdateSerializer(serializers.ModelSerializer):
@@ -156,6 +150,25 @@ class CatalogUnitCreateUpdateSerializer(serializers.ModelSerializer):
         model = CatalogUnit
         fields = ['id', 'name', 'description']
         read_only_fields = ['id']
+
+
+class CatalogKTSUnitSerializer(serializers.Serializer):
+    id = serializers.IntegerField(source='unit.id')
+    name = serializers.CharField(source='unit.name')
+    description = serializers.CharField(source='unit.description')
+    quantity = serializers.IntegerField()
+    price = serializers.SerializerMethodField()
+    items_list = serializers.SerializerMethodField()
+
+    def get_price(self, obj):
+        unit_items = CatalogUnitItem.objects.filter(unit=obj.unit)
+        total = sum(Decimal(item.item.price) * item.quantity for item in unit_items)
+        final_price = total * obj.quantity
+        return f"{final_price:.2f}"
+
+    def get_items_list(self, obj):
+        unit_items = CatalogUnitItem.objects.filter(unit=obj.unit)
+        return CatalogUnitItemSerializer(unit_items, many=True).data
 
 
 # ————— Изделие внутри КТС —————
@@ -232,7 +245,7 @@ class CatalogKTSSerializer(serializers.ModelSerializer):
 
     def get_units_list(self, obj):
         kts_units = CatalogKTSUnit.objects.filter(kts=obj)
-        return CatalogUnitSerializer(kts_units, many=True).data
+        return CatalogKTSUnitSerializer(kts_units, many=True).data
 
     def get_items_list(self, obj):
         kts_items = CatalogKTSItem.objects.filter(kts=obj)
