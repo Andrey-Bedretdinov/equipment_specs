@@ -192,3 +192,28 @@ class ProjectSerializer(serializers.ModelSerializer):
 
         final_price = round(total, 2)
         return f"{final_price:.2f}"
+
+
+class ProjectShortSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project
+        fields = ['id', 'name', 'description', 'price']
+
+    def get_price(self, obj):
+        total = Decimal("0.0")
+
+        kts = ProjectKTS.objects.filter(project=obj)
+        for kts_obj in kts:
+            total += Decimal(KTSWithUnitsItemsSerializer(kts_obj).get_price(kts_obj))
+
+        units = ProjectUnit.objects.filter(project=obj)
+        for unit_obj in units:
+            total += Decimal(UnitWithItemsSerializer(unit_obj).get_price(unit_obj))
+
+        items = ProjectItem.objects.filter(project=obj)
+        total += sum(item.item.price * item.quantity for item in items)
+
+        final_price = round(total, 2)
+        return f"{final_price:.2f}"
