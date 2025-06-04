@@ -19,14 +19,18 @@ class ItemSerializer(serializers.Serializer):
 
 
 # юнит с изделиями
-class UnitWithItemsSerializer(serializers.Serializer):
+class UnitWithItemsSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='unit.id')
     name = serializers.CharField(source='unit.name')
     description = serializers.CharField(source='unit.description')
     quantity = serializers.IntegerField()
-    items_list = serializers.SerializerMethodField()  # <-- ПРАВИЛЬНО
+    items_list = serializers.SerializerMethodField()
 
-    def get_items_list(self, obj):  # <-- И метод тоже переименовать!
+    class Meta:
+        model = ProjectUnit
+        fields = ['id', 'name', 'description', 'quantity', 'items_list']
+
+    def get_items_list(self, obj):
         unit_items = CatalogUnitItem.objects.filter(unit=obj.unit)
         return [
             {
@@ -46,13 +50,17 @@ class UnitWithItemsSerializer(serializers.Serializer):
 
 
 # ктс с юнитами и изделиями
-class KTSWithUnitsItemsSerializer(serializers.Serializer):
+class KTSWithUnitsItemsSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='kts.id')
     name = serializers.CharField(source='kts.name')
     description = serializers.CharField(source='kts.description')
     quantity = serializers.IntegerField()
     units_list = serializers.SerializerMethodField()
     items_list = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProjectKTS
+        fields = ['id', 'name', 'description', 'quantity', 'units_list', 'items_list']
 
     def get_units_list(self, obj):
         kts_units = CatalogKTSUnit.objects.filter(kts=obj.kts)
