@@ -1,0 +1,33 @@
+# IDE
+.idea/
+.vscode/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+.env
+*.env
+postgres/.env
+
+# Migrations - НЕЛЬЗЯ игнорировать! Миграции коммитим.
+# Но можно игнорировать если случайно создадутся мусорные (например, .pyc файлы)
+**/migrations/*.pyc
+**/migrations/__pycache__/
+
+# SQLite (если ты используешь локально SQLite)
+db.sqlite3
+
+# Media
+/media/
+
+# Static
+/staticfiles/
+
+# Test files
+test.py
+
+# Docker volumes / data
+/data/

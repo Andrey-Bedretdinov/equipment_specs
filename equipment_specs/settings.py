@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,8 +25,7 @@ SECRET_KEY = 'django-insecure-m2a0ch32d9e_rj%)4fxzqe2a8p=iewx#2!nehxb&po+gt$-@vl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -37,9 +36,42 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
+    'drf_spectacular',
+    'apps.projects',
+    'apps.catalog',
+    'drf_spectacular_sidecar',
+    'corsheaders',
+    'rest_framework',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API для конфигуратора спецификаций оборудования',
+    'DESCRIPTION': (
+        'Многоуровневая система для формирования спецификаций проектов из готовых справочников.\n\n'
+        'Возможности API:\n'
+        '- Работа со справочниками изделий, комплектных единиц (юнитов) и комплексов (КТС)\n'
+        '- Сборка проектов из готовых КТС, юнитов и изделий\n'
+        '- Управление проектами: создание, обновление, удаление\n'
+        '- Управление КТС в проектах\n'
+        '- Управление юнитами в рамках КТС\n'
+        '- Управление изделиями в рамках юнитов\n\n'
+        'Документация поддерживает стандарт OpenAPI 3.0 и совместима с Swagger и ReDoc.\n'
+        'Все эндпоинты требуют авторизации (JWT-токен).'
+    ),
+    'VERSION': '2.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,  # убрать OpenAPI schema из публичного API, если не надо
+}
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -48,6 +80,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'equipment_specs.urls'
 
@@ -73,10 +107,15 @@ WSGI_APPLICATION = 'equipment_specs.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB", "specs_db"),
+        "USER": os.getenv("POSTGRES_USER", "specs_user"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "specs_pass"),
+        "HOST": os.getenv("POSTGRES_HOST", "db"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
 }
 
