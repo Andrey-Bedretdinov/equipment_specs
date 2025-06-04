@@ -1,9 +1,23 @@
 from rest_framework import serializers
+
 from .models import CatalogItem, CatalogUnit, CatalogUnitItem, CatalogKTS, CatalogKTSUnit, CatalogKTSItem
 
 
 class CatalogItemSerializer(serializers.ModelSerializer):
-    """Сериализатор для просмотра изделия"""
+    """
+    Сериализатор для чтения информации об изделии.
+
+    Отдаёт:
+    - id: идентификатор изделия
+    - name: наименование изделия
+    - description: описание изделия
+    - supplier: поставщик
+    - catalog_code: артикул
+    - price: цена за единицу
+    - currency: валюта цены
+    - manufactured: производитель
+    - delivery_type: тип поставки (например, склад / под заказ)
+    """
 
     class Meta:
         model = CatalogItem
@@ -14,7 +28,21 @@ class CatalogItemSerializer(serializers.ModelSerializer):
 
 
 class CatalogItemCreateUpdateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания и обновления изделия"""
+    """
+    Сериализатор для создания и редактирования изделия.
+
+    Используется для POST (создание) и PATCH (обновление) запросов.
+
+    Поля:
+    - name: наименование изделия (обязательное)
+    - description: описание изделия (опционально)
+    - supplier: поставщик
+    - catalog_code: артикул
+    - price: цена
+    - currency: валюта
+    - manufactured: производитель
+    - delivery_type: тип поставки
+    """
 
     class Meta:
         model = CatalogItem
@@ -26,7 +54,14 @@ class CatalogItemCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class CatalogUnitItemSerializer(serializers.ModelSerializer):
-    """Сериализатор для изделия в юните (с вложенным изделием)"""
+    """
+    Сериализатор для изделия внутри юнита (read only).
+
+    Отдаёт:
+    - id: идентификатор связи
+    - item: вложенный объект изделия
+    - quantity: количество изделий в юните
+    """
     item = CatalogItemSerializer(read_only=True)
 
     class Meta:
@@ -35,7 +70,14 @@ class CatalogUnitItemSerializer(serializers.ModelSerializer):
 
 
 class CatalogUnitItemCreateUpdateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания и обновления изделия в юните"""
+    """
+    Сериализатор для создания / обновления изделия в юните.
+
+    Используется для:
+    - unit: ID юнита
+    - item: ID изделия
+    - quantity: количество
+    """
 
     class Meta:
         model = CatalogUnitItem
@@ -44,7 +86,15 @@ class CatalogUnitItemCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class CatalogUnitSerializer(serializers.ModelSerializer):
-    """Сериализатор для просмотра юнита с изделиями"""
+    """
+    Сериализатор для чтения информации о юните.
+
+    Отдаёт:
+    - id: идентификатор юнита
+    - name: наименование юнита
+    - description: описание
+    - items: список изделий в юните
+    """
     items = serializers.SerializerMethodField()
 
     class Meta:
@@ -52,12 +102,23 @@ class CatalogUnitSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'items']
 
     def get_items(self, obj):
+        """
+        Возвращает список изделий, входящих в юнит.
+        """
         unit_items = CatalogUnitItem.objects.filter(unit=obj)
         return CatalogUnitItemSerializer(unit_items, many=True).data
 
 
 class CatalogUnitCreateUpdateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания и обновления юнита"""
+    """
+    Сериализатор для создания и редактирования юнита.
+
+    Используется для POST и PATCH.
+
+    Поля:
+    - name: наименование
+    - description: описание
+    """
 
     class Meta:
         model = CatalogUnit
@@ -66,7 +127,14 @@ class CatalogUnitCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class CatalogKTSUnitSerializer(serializers.ModelSerializer):
-    """Сериализатор для юнита в КТС (с вложенным юнитом)"""
+    """
+    Сериализатор для чтения юнита внутри КТС.
+
+    Отдаёт:
+    - id: идентификатор связи
+    - unit: вложенный юнит
+    - quantity: количество юнитов
+    """
     unit = CatalogUnitSerializer(read_only=True)
 
     class Meta:
@@ -75,7 +143,14 @@ class CatalogKTSUnitSerializer(serializers.ModelSerializer):
 
 
 class CatalogKTSUnitCreateUpdateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания и обновления юнита в КТС"""
+    """
+    Сериализатор для создания и редактирования связи КТС-Юнит.
+
+    Используется для:
+    - kts: ID КТС
+    - unit: ID юнита
+    - quantity: количество
+    """
 
     class Meta:
         model = CatalogKTSUnit
@@ -84,7 +159,14 @@ class CatalogKTSUnitCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class CatalogKTSItemSerializer(serializers.ModelSerializer):
-    """Сериализатор для изделия в КТС (с вложенным изделием)"""
+    """
+    Сериализатор для чтения изделия внутри КТС.
+
+    Отдаёт:
+    - id: идентификатор связи
+    - item: вложенный объект изделия
+    - quantity: количество изделий
+    """
     item = CatalogItemSerializer(read_only=True)
 
     class Meta:
@@ -93,7 +175,14 @@ class CatalogKTSItemSerializer(serializers.ModelSerializer):
 
 
 class CatalogKTSItemCreateUpdateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания и обновления изделия в КТС"""
+    """
+    Сериализатор для создания и редактирования связи КТС-Изделие.
+
+    Используется для:
+    - kts: ID КТС
+    - item: ID изделия
+    - quantity: количество
+    """
 
     class Meta:
         model = CatalogKTSItem
@@ -102,7 +191,16 @@ class CatalogKTSItemCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class CatalogKTSSerializer(serializers.ModelSerializer):
-    """Сериализатор для просмотра КТС с юнитами и изделиями"""
+    """
+    Сериализатор для чтения информации о КТС.
+
+    Отдаёт:
+    - id: идентификатор КТС
+    - name: наименование
+    - description: описание
+    - units: список юнитов с количеством
+    - items: список изделий с количеством
+    """
     units = serializers.SerializerMethodField()
     items = serializers.SerializerMethodField()
 
@@ -111,16 +209,30 @@ class CatalogKTSSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'units', 'items']
 
     def get_units(self, obj):
+        """
+        Возвращает список юнитов внутри КТС.
+        """
         kts_units = CatalogKTSUnit.objects.filter(kts=obj)
         return CatalogKTSUnitSerializer(kts_units, many=True).data
 
     def get_items(self, obj):
+        """
+        Возвращает список изделий внутри КТС.
+        """
         kts_items = CatalogKTSItem.objects.filter(kts=obj)
         return CatalogKTSItemSerializer(kts_items, many=True).data
 
 
 class CatalogKTSCreateUpdateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания и обновления КТС"""
+    """
+    Сериализатор для создания и редактирования КТС.
+
+    Используется для POST и PATCH.
+
+    Поля:
+    - name: наименование
+    - description: описание
+    """
 
     class Meta:
         model = CatalogKTS
