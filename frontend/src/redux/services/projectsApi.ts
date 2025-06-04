@@ -19,7 +19,7 @@ export const api = createApi({
   tagTypes: ['Projects'],
   endpoints: (builder) => ({
     getProjects: builder.query<IProject[], void>({
-      query: () => 'projects/',
+      query: () => 'projects/short',
       providesTags: ['Projects'],
     }),
     getProjectById: builder.query<IProject, string>({
