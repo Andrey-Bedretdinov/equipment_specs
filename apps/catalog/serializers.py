@@ -118,6 +118,21 @@ class CatalogUnitSerializer(serializers.ModelSerializer):
         return f"{total:.2f}"
 
 
+class CatalogUnitCreateUpdateSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания и редактирования юнита.
+
+    Поля:
+    - name: наименование юнита
+    - description: описание юнита
+    """
+
+    class Meta:
+        model = CatalogUnit
+        fields = ['id', 'name', 'description']
+        read_only_fields = ['id']
+
+
 # ————— Юнит внутри КТС —————
 
 class CatalogKTSUnitSerializer(serializers.Serializer):

@@ -6,7 +6,7 @@ from .models import CatalogItem, CatalogUnit, CatalogKTS
 from .serializers import (
     CatalogItemSerializer, CatalogItemCreateSerializer,
     CatalogUnitSerializer,
-    CatalogKTSSerializer,
+    CatalogKTSSerializer, CatalogUnitCreateUpdateSerializer,
 )
 
 
@@ -50,11 +50,21 @@ class CatalogItemViewSet(
         summary="Получить юнит",
         description="Возвращает подробную информацию о юните с изделиями по ID."
     ),
+    create=extend_schema(
+        summary="Создать юнит",
+        description="Создаёт новый юнит.",
+        request=CatalogUnitCreateUpdateSerializer,
+        responses={201: CatalogUnitSerializer}
+    ),
 )
-class CatalogUnitViewSet(viewsets.ReadOnlyModelViewSet):
+class CatalogUnitViewSet(viewsets.ModelViewSet):
     queryset = CatalogUnit.objects.all()
     permission_classes = [AllowAny]
-    serializer_class = CatalogUnitSerializer
+
+    def get_serializer_class(self):
+        if self.action in ['create']:
+            return CatalogUnitCreateUpdateSerializer
+        return CatalogUnitSerializer
 
 
 @extend_schema_view(
