@@ -1,12 +1,17 @@
+import { BrowserRouter } from 'react-router-dom'
 import './App.css'
-import SpecTree from './components/SpecTree/SpecTree'
+import AppRouter from './components/AppRouter/AppRouter'
+import Navbar from './components/NavBar/NavBar'
 
 function App() {
 
     return (
-        <>
-            <SpecTree/>
-        </>
+        <BrowserRouter>
+            <Navbar />
+            <div className='main'>
+                <AppRouter />
+            </div>
+        </BrowserRouter>
     )
 }
 

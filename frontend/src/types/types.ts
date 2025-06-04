@@ -1,38 +1,32 @@
-export type SpecNodeType = 'project' | 'ktc' | 'unit' | 'item'
-
-export interface BaseNode {
-  id: number                // ID из базы, используется в API
-  key: string               // ключ для дерева (строка, уникальный в UI)
-  title: string             // заголовок для отображения
-  type: SpecNodeType        // тип узла
-  children?: SpecNode[]     // вложенные элементы
+interface INode {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
 }
 
-export interface ItemNode extends BaseNode {
-  type: 'item'
-  supplierName: string
-  catalogCode: string
-  productName: string
-  quantity: number
-  price: number
-  manufacturer: string
-  currency: string
-  deliveryType: string
+export interface IItem extends INode {
+  supplier: string;
+  catalog_code: string;
+  currency: string;
+  manufactured: string;
+  delivery_type: string;
+  quantity: number;
 }
 
-export interface UnitNode extends BaseNode {
-  type: 'unit'
-  children: ItemNode[]
+export interface IUnit extends INode {
+  items_list?: IItem[];
+  quantity: number;
 }
 
-export interface KtcNode extends BaseNode {
-  type: 'ktc'
-  children: UnitNode[]
+export interface IKts extends INode {
+  units_list?: IUnit[];
+  items_list?: IItem[];
+  quantity: number;
 }
 
-export interface ProjectNode extends BaseNode {
-  type: 'project'
-  children: KtcNode[]
+export interface IProject extends INode {
+  kts_list?: IKts[];
+  units_list?: IUnit[];
+  items_list?: IItem[];
 }
-
-export type SpecNode = ProjectNode | KtcNode | UnitNode | ItemNode

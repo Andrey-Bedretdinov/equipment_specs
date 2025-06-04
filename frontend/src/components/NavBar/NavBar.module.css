@@ -1,0 +1,32 @@
+.header {
+    display: flex;
+    align-items: center;
+    background-color: #e1e0e0;
+}
+
+.headerBox {
+    display: flex;
+    align-items: end;
+    gap: 24px;
+
+    width: var(--laptop);
+    margin: 0 auto;
+    padding: 16px 24px;
+}
+
+.headerItems{
+    display: flex;
+    gap: 16px;
+}
+
+.headerItem{
+    font-size: 20px;
+    cursor: pointer;
+
+    transition: .2s linear;
+    border-radius: 6px;
+}
+
+.headerItem:hover{
+    color: #318ee5;
+}
