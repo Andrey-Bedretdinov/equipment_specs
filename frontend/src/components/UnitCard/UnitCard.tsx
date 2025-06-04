@@ -10,7 +10,7 @@ interface UnitCardProps {
 }
 const UnitCard: React.FC<UnitCardProps> = ({ unit }) => {
 
-    const [collapsed, setCollapsed] = useState<boolean>(false);
+    const [collapsed, setCollapsed] = useState<boolean>(true);
 
     const toggleCollapse = () => {
         setCollapsed(prev => !prev);

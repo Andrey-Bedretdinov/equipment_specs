@@ -13,8 +13,8 @@ const baseQuery = fetchBaseQuery({
   },
 })
 
-export const api = createApi({
-  reducerPath: 'api',
+export const projectsApi = createApi({
+  reducerPath: 'projectsApi',
   baseQuery,
   tagTypes: ['Projects'],
   endpoints: (builder) => ({
@@ -32,4 +32,4 @@ export const api = createApi({
 export const {
   useGetProjectsQuery,
   useGetProjectByIdQuery,
-} = api
+} = projectsApi
