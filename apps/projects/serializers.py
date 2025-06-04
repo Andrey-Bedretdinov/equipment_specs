@@ -42,7 +42,7 @@ class UnitWithItemsSerializer(serializers.ModelSerializer):
                 "description": item.item.description,
                 "supplier": item.item.supplier,
                 "catalog_code": item.item.catalog_code,
-                "price": str(round(item.item.price, 2)),
+                "price": f"{round(item.item.price * item.quantity, 2):.2f}",  # итоговая цена с количеством!
                 "currency": item.item.currency,
                 "manufactured": item.item.manufactured,
                 "delivery_type": item.item.delivery_type,
@@ -80,6 +80,7 @@ class KTSWithUnitsItemsSerializer(serializers.ModelSerializer):
                 "name": unit.unit.name,
                 "description": unit.unit.description,
                 "quantity": unit.quantity,
+                "price": f"{round(sum(item.item.price * item.quantity for item in CatalogUnitItem.objects.filter(unit=unit.unit)) * unit.quantity, 2):.2f}",
                 "items_list": [
                     {
                         "id": item.item.id,
@@ -87,7 +88,7 @@ class KTSWithUnitsItemsSerializer(serializers.ModelSerializer):
                         "description": item.item.description,
                         "supplier": item.item.supplier,
                         "catalog_code": item.item.catalog_code,
-                        "price": str(round(item.item.price, 2)),
+                        "price": f"{round(item.item.price * item.quantity, 2):.2f}",  # вот тут!
                         "currency": item.item.currency,
                         "manufactured": item.item.manufactured,
                         "delivery_type": item.item.delivery_type,
@@ -108,7 +109,7 @@ class KTSWithUnitsItemsSerializer(serializers.ModelSerializer):
                 "description": item.item.description,
                 "supplier": item.item.supplier,
                 "catalog_code": item.item.catalog_code,
-                "price": str(round(item.item.price, 2)),
+                "price": f"{round(item.item.price * item.quantity, 2):.2f}",  # вот тут!
                 "currency": item.item.currency,
                 "manufactured": item.item.manufactured,
                 "delivery_type": item.item.delivery_type,
