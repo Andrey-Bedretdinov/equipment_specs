@@ -22,9 +22,14 @@ export const api = createApi({
       query: () => 'projects/',
       providesTags: ['Projects'],
     }),
+    getProjectById: builder.query<IProject, string>({
+      query: (id: string) => `projects/${id}`,
+      providesTags: ['Projects'],
+    }),
   }),
 })
 
 export const {
   useGetProjectsQuery,
+  useGetProjectByIdQuery,
 } = api
