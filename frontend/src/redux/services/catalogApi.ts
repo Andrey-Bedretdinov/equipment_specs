@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { IKts } from '../../types/types'
+import type { IItem, IKts, IUnit } from '../../types/types'
 
 const username = 'admin'
 const password = 'admin'
@@ -16,15 +16,25 @@ const baseQuery = fetchBaseQuery({
 export const catalogApi = createApi({
   reducerPath: 'catalogApi',
   baseQuery,
-  tagTypes: ['Kts'],
+  tagTypes: ['Kts', 'Units', 'Items'],
   endpoints: (builder) => ({
     getCatalogKts: builder.query<IKts[], void>({
       query: () => 'catalog/kts',
       providesTags: ['Kts'],
+    }),
+    getCatalogUnits: builder.query<IUnit[], void>({
+      query: () => 'catalog/units',
+      providesTags: ['Units'],
+    }),
+    getCatalogItems: builder.query<IItem[], void>({
+      query: () => 'catalog/items',
+      providesTags: ['Items'],
     }),
   }),
 })
 
 export const {
   useGetCatalogKtsQuery,
+  useGetCatalogUnitsQuery,
+  useGetCatalogItemsQuery,
 } = catalogApi

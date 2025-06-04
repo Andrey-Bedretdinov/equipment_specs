@@ -8,7 +8,6 @@ const { Title } = Typography;
 const CatalogKtsPage: React.FC = () => {
 
     const { data: kts_list, isLoading, isError } = useGetCatalogKtsQuery();
-    console.log(kts_list)
 
     return (
         <>
