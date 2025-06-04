@@ -12,14 +12,13 @@ interface ItemCardProps {
 const ItemCardsList: React.FC<ItemCardProps> = ({ items_list }) => {
     return (
         <>
-            <Title>Список проектов</Title>
+            <Title level={3}>Список items</Title>
             {(!items_list.length || !items_list) ? (
                 <Text>Проектов нет</Text>
             ) : (
                 items_list.map((item) =>
                     <ItemCard key={item.id} item={item} />
                 )
-
             )}
         </>
     );
