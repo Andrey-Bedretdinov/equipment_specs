@@ -1,10 +1,10 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.permissions import AllowAny
 
 from .models import CatalogItem, CatalogUnit, CatalogKTS
 from .serializers import (
-    CatalogItemSerializer,
+    CatalogItemSerializer, CatalogItemCreateSerializer,
     CatalogUnitSerializer,
     CatalogKTSSerializer,
 )
@@ -19,11 +19,26 @@ from .serializers import (
         summary="Получить изделие",
         description="Возвращает подробную информацию об одном изделии по ID."
     ),
+    create=extend_schema(
+        summary="Создать изделие",
+        description="Создаёт новое изделие в каталоге.",
+        request=CatalogItemCreateSerializer,
+        responses={201: CatalogItemSerializer},
+    ),
 )
-class CatalogItemViewSet(viewsets.ReadOnlyModelViewSet):
+class CatalogItemViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,  # <-- Добавляем только create
+    viewsets.GenericViewSet
+):
     queryset = CatalogItem.objects.all()
     permission_classes = [AllowAny]
-    serializer_class = CatalogItemSerializer
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CatalogItemCreateSerializer
+        return CatalogItemSerializer
 
 
 @extend_schema_view(

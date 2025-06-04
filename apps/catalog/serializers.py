@@ -31,6 +31,29 @@ class CatalogItemSerializer(serializers.ModelSerializer):
         ]
 
 
+class CatalogItemCreateSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания нового изделия.
+
+    Принимает:
+    - name: наименование изделия (обязательное)
+    - description: описание изделия (опционально)
+    - supplier: поставщик
+    - catalog_code: артикул
+    - price: цена
+    - currency: валюта
+    - manufactured: производитель
+    - delivery_type: тип поставки
+    """
+
+    class Meta:
+        model = CatalogItem
+        fields = [
+            'name', 'description', 'supplier', 'catalog_code',
+            'price', 'currency', 'manufactured', 'delivery_type'
+        ]
+
+
 # ————— Изделия внутри юнита —————
 
 class CatalogUnitItemSerializer(serializers.Serializer):
