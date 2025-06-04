@@ -1,0 +1,6 @@
+.card{
+    background-color: var(--project-color);
+    margin-top: 24px;
+
+    cursor: pointer;
+}

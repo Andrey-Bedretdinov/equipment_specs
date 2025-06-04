@@ -31,3 +31,18 @@ export interface ProjectNode extends BaseNode {
 }
 
 export type SpecNode = ProjectNode | KtcNode | UnitNode | ItemNode
+
+
+// ТИПЫ ДЛЯ ПОДХОДА С КАРТОЧКАМИ
+
+export interface IProject {
+  id: number;
+  name: string;
+  description: string;
+}
+
+export interface IProjectKtsLink {
+  id: number;
+  project: number;
+  catalog_kts: number;
+}

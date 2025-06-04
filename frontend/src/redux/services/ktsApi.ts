@@ -1,12 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { IProject } from '../../types/types'
+import type { IProjectKtsLink } from '../../types/types'
 
 const username = 'admin'
 const password = 'admin'
 const basicAuth = btoa(`${username}:${password}`)
 
-export const projectsApi = createApi({
-  reducerPath: 'projectsApi',
+export const ktsApi = createApi({
+  reducerPath: 'ktsApi',
   baseQuery: fetchBaseQuery({
     baseUrl: 'https://specs.omgh.ru/api/',
     prepareHeaders: (headers) => {
@@ -14,15 +14,15 @@ export const projectsApi = createApi({
       return headers
     },
   }),
-  tagTypes: ['Project'],
+  tagTypes: ['Kts'],
   endpoints: (builder) => ({
-    getProjects: builder.query<IProject[], void>({
-      query: () => 'projects/',
-      providesTags: ['Project'],
+    getProjectKtsLinks: builder.query<IProjectKtsLink[], number>({
+      query: (project_id: number) => `projects/${project_id}/kts/`,
+      providesTags: ['Kts'],
     }),
   }),
 })
 
 export const {
-  useGetProjectsQuery,
-} = projectsApi
+  useGetProjectKtsLinksQuery,
+} = ktsApi

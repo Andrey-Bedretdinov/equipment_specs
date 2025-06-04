@@ -1,12 +1,11 @@
 import './App.css'
-import ProjectTree from './components/ProjectTree/ProjectTree'
-import { projectsData } from './constants/projectsData'
+import AppRouter from './components/AppRouter/AppRouter'
 
 function App() {
 
     return (
         <>
-            <ProjectTree data={projectsData}/>
+            <AppRouter/>
         </>
     )
 }
