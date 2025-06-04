@@ -17,7 +17,8 @@ const ProjectPage: React.FC = () => {
             title={
                 <>
                     <Title>{project?.name}</Title>
-                    <Text>{project?.description}</Text>
+                    <Text>{project?.description}</Text><br/>
+                    <Text strong>Итоговая стоимость: {project?.price} ₽</Text>
                 </>
             }
         >

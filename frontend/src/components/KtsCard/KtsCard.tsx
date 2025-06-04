@@ -1,6 +1,9 @@
-import { Card, Typography } from "antd";
+import { Button, Card, Typography } from "antd";
+import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import type { IKts } from "../../types/types";
 import UnitCardsList from "../UnitCardsList/UnitCardsList";
+import ItemCardsList from "../ItemCardsList/ItemCardsList";
+import { useState } from "react";
 const { Text, Title } = Typography;
 
 interface KtsCardProps {
@@ -8,13 +11,29 @@ interface KtsCardProps {
 }
 const KtsCard: React.FC<KtsCardProps> = ({ kts }) => {
 
+    const [collapsed, setCollapsed] = useState<boolean>(false);
+
+    const toggleCollapse = () => {
+        setCollapsed(prev => !prev);
+    };
+
     return (
         <Card
             title={
-                <>
-                    <Title level={2}>{kts.name}</Title>
-                    <Text>{kts.description}</Text>
-                </>
+                <div
+                    style={{ display: 'flex', alignItems: 'center', gap: 16 }}
+                >
+                    <Button
+                        type="text"
+                        icon={collapsed ? <RightOutlined /> : <DownOutlined />}
+                        onClick={toggleCollapse}
+                    />
+                    <div>
+                        <Title level={2}>{kts.name}</Title>
+                        <Text>{kts.description}</Text><br/>
+                        <Text strong>Итоговая стоимость: {kts.price} ₽</Text>
+                    </div>
+                </div>
             }
             style={{
                 width: '100%',
@@ -24,10 +43,14 @@ const KtsCard: React.FC<KtsCardProps> = ({ kts }) => {
                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
             }}
         >
-            <UnitCardsList units_list={kts.units_list ?? []}/>
+            {!collapsed && (
+                <>
+                    <UnitCardsList units_list={kts.units_list ?? []} />
+                    <ItemCardsList items_list={kts.items_list ?? []} />
+                </>
+            )}
         </Card>
-    )
-
-}
+    );
+};
 
 export default KtsCard;

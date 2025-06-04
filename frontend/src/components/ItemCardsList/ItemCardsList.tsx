@@ -3,7 +3,7 @@ import { Typography } from 'antd';
 import type { IItem } from '../../types/types';
 import ItemCard from '../ItemCard/ItemCard';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface ItemCardProps {
     items_list: IItem[];
@@ -12,7 +12,6 @@ interface ItemCardProps {
 const ItemCardsList: React.FC<ItemCardProps> = ({ items_list }) => {
     return (
         <>
-            <Title level={3}>Список items</Title>
             {(!items_list.length || !items_list) ? (
                 <Text>Проектов нет</Text>
             ) : (

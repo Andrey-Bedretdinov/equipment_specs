@@ -3,6 +3,8 @@
   --kts-color: #f0f5ff;
   --unit-color: #c0e7cd;
   --item-color: #fff1f0;
+
+  --laptop: 1200px;
 }
 
 
@@ -15,7 +17,7 @@
 }
 
 .main{
-  width: 1200px;
+  width: var(--laptop);
   margin: 0 auto;
   padding: 24px;
 }
