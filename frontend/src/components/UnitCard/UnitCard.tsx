@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import styles from './UnitCard.module.css';
 import { useLocation } from "react-router-dom";
+import AddItemToUnitModal from "../AddItemToUnitModal/AddItemToUnitModal";
 const { Text, Title } = Typography;
 
 interface UnitCardProps {
@@ -14,6 +15,7 @@ interface UnitCardProps {
 const UnitCard: React.FC<UnitCardProps> = ({ unit }) => {
 
     const [collapsed, setCollapsed] = useState<boolean>(true);
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
     const location = useLocation();
     const isEditable = location.pathname.startsWith('/catalog');
@@ -42,6 +44,7 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit }) => {
                             <Button
                                 type="primary"
                                 icon={<EditOutlined />}
+                                onClick={() => setIsModalOpen(true)}
                             />
                         )}
                     </div>
@@ -50,6 +53,13 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit }) => {
             className={styles.card}
         >
             {!collapsed && <ItemCardsList items_list={unit.items_list ?? []} />}
+
+            {isModalOpen &&
+                <AddItemToUnitModal
+                    isModalOpen={isModalOpen}
+                    onCancel={() => setIsModalOpen(false)}
+                    unitId={unit.id}
+                />}
         </Card>
     )
 

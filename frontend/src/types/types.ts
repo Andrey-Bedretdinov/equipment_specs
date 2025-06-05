@@ -47,3 +47,8 @@ export interface IUnitCreate {
   name: string;
   description: string;
 }
+
+export interface IAddItemToUnit {
+  id: number;
+  items: { id: number, quantity: number }[]
+}

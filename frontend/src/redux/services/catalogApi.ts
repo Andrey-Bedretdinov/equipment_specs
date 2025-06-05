@@ -1,5 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { IItem, IItemCreate, IKts, IUnit, IUnitCreate } from '../../types/types'
+import type { 
+  IAddItemToUnit, 
+  IItem, 
+  IItemCreate, 
+  IKts, 
+  IUnit, 
+  IUnitCreate 
+} from '../../types/types'
 
 const username = 'admin'
 const password = 'admin'
@@ -48,6 +55,14 @@ export const catalogApi = createApi({
       }),
       invalidatesTags: ['Units'],
     }),
+    addCatalogItemsToUnit: builder.mutation<IItem[], IAddItemToUnit>({
+      query: (newUnitData) => ({
+        url: 'catalog/units/add-items/',
+        method: 'POST',
+        body: newUnitData,
+      }),
+      invalidatesTags: ['Units'],
+    }),
   }),
 })
 
@@ -57,4 +72,5 @@ export const {
   useGetCatalogItemsQuery,
   useAddCatalogItemMutation,
   useAddCatalogUnitMutation,
+  useAddCatalogItemsToUnitMutation
 } = catalogApi
