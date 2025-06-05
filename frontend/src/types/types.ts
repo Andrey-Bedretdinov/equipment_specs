@@ -42,3 +42,8 @@ export interface IItemCreate {
   manufactured: string;
   delivery_type: string;
 }
+
+export interface IUnitCreate {
+  name: string;
+  description: string;
+}
