@@ -264,3 +264,37 @@ class CatalogKTSCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CatalogKTS
         fields = ['name', 'description']
+
+
+class AddElementsToKTSSerializer(serializers.Serializer):
+    """
+    тело POST /catalog/kts/add-elements
+    {
+        "kts_id": 12,
+        "items": [
+            {"item_id": 33, "quantity": 3},
+            {"item_id": 43, "quantity": 2},
+            {"item_id": 4}
+        ],
+        "units": [
+            {"unit_id": 2, "quantity": 2},
+            {"unit_id": 3, "quantity": 2},
+            {"unit_id": 4}
+        ]
+    }
+    """
+    kts_id = serializers.IntegerField()
+    items = serializers.ListField(
+        child=serializers.DictField(child=serializers.IntegerField()),
+        required=False
+    )
+    units = serializers.ListField(
+        child=serializers.DictField(child=serializers.IntegerField()),
+        required=False
+    )
+
+    def validate(self, attrs):
+        # нужны хотя бы items или units
+        if not attrs.get("items") and not attrs.get("units"):
+            raise serializers.ValidationError("нужно передать items или/и units")
+        return attrs

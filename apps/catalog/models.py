@@ -70,7 +70,9 @@ class CatalogKTSUnit(models.Model):
     class Meta:
         verbose_name = 'Юнит в КТС'
         verbose_name_plural = 'Юниты в КТС'
-
+        constraints = [
+            models.UniqueConstraint(fields=['kts', 'unit'], name='unique_kts_unit')
+        ]  # ← добавили
 
 class CatalogKTSItem(models.Model):
     kts = models.ForeignKey(CatalogKTS, on_delete=models.CASCADE, related_name='items', verbose_name='КТС')
@@ -83,3 +85,6 @@ class CatalogKTSItem(models.Model):
     class Meta:
         verbose_name = 'Изделие в КТС'
         verbose_name_plural = 'Изделия в КТС'
+        constraints = [
+            models.UniqueConstraint(fields=['kts', 'item'], name='unique_kts_item')
+        ]  # ← добавили

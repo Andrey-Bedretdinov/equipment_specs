@@ -4,12 +4,12 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import CatalogItem, CatalogUnit, CatalogKTS, CatalogUnitItem
+from .models import CatalogItem, CatalogUnit, CatalogKTS, CatalogUnitItem, CatalogKTSItem, CatalogKTSUnit
 from .serializers import (
     CatalogItemSerializer, CatalogItemCreateSerializer,
     CatalogUnitSerializer,
     CatalogKTSSerializer, CatalogUnitCreateUpdateSerializer, AddItemsToUnitSerializer, CatalogUnitItemSerializer,
-    CatalogKTSCreateSerializer,
+    CatalogKTSCreateSerializer, AddElementsToKTSSerializer, CatalogKTSItemSerializer, CatalogKTSUnitSerializer,
 )
 
 
@@ -134,3 +134,61 @@ class CatalogKTSViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return CatalogKTSCreateSerializer
         return CatalogKTSSerializer
+
+    @extend_schema(
+        request=AddElementsToKTSSerializer,
+        responses={201: CatalogKTSSerializer},
+        summary="Добавить изделия и юниты в КТС",
+        description=(
+                "Позволяет единым запросом добавить изделия (items) и/или юниты (units) "
+                "в существующий КТС. quantity по умолчанию = 1."
+        )
+    )
+    @action(detail=False, methods=["post"], url_path="add-elements")
+    def add_elements(self, request):
+        serializer = AddElementsToKTSSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        kts_id = serializer.validated_data["kts_id"]
+        items_data = serializer.validated_data.get("items", [])
+        units_data = serializer.validated_data.get("units", [])
+
+        # проверяем наличие ктс
+        try:
+            kts = CatalogKTS.objects.get(id=kts_id)
+        except CatalogKTS.DoesNotExist:
+            return Response({"error": "ктс не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        # добавляем изделия
+        created_items = []
+        for item in items_data:
+            item_id = item.get("item_id")
+            qty = item.get("quantity", 1)
+            try:
+                obj = CatalogItem.objects.get(id=item_id)
+            except CatalogItem.DoesNotExist:
+                return Response({"error": f"изделие id {item_id} не найдено"}, status=status.HTTP_404_NOT_FOUND)
+            created_items.append(
+                CatalogKTSItem.objects.create(kts=kts, item=obj, quantity=qty)
+            )
+
+        # добавляем юниты
+        created_units = []
+        for unit in units_data:
+            unit_id = unit.get("unit_id")
+            qty = unit.get("quantity", 1)
+            try:
+                obj = CatalogUnit.objects.get(id=unit_id)
+            except CatalogUnit.DoesNotExist:
+                return Response({"error": f"юнит id {unit_id} не найден"}, status=status.HTTP_404_NOT_FOUND)
+            created_units.append(
+                CatalogKTSUnit.objects.create(kts=kts, unit=obj, quantity=qty)
+            )
+
+        # формируем ответ
+        response = {
+            "kts_id": kts.id,
+            "items": CatalogKTSItemSerializer(created_items, many=True).data,
+            "units": CatalogKTSUnitSerializer(created_units, many=True).data,
+        }
+        return Response(response, status=status.HTTP_201_CREATED)
