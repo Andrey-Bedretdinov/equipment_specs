@@ -33,6 +33,7 @@ from .serializers import (
     ProjectElementsSerializer,
 )
 
+
 # ------------------------ ProjectViewSet ------------------------ #
 @extend_schema_view(
     list=extend_schema(summary="Получить список проектов"),
@@ -61,8 +62,15 @@ class ProjectViewSet(
 
     # ---------- create: пустой проект ----------
     @extend_schema(summary="Создать пустой проект", responses={201: ProjectSerializer})
+    @extend_schema(summary="Создать пустой проект", responses={201: ProjectSerializer})
     def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
+        write_ser = self.get_serializer(data=request.data)
+        write_ser.is_valid(raise_exception=True)
+        self.perform_create(write_ser)
+
+        read_ser = ProjectSerializer(write_ser.instance, context=self.get_serializer_context())
+        headers = self.get_success_headers(read_ser.data)
+        return Response(read_ser.data, status=status.HTTP_201_CREATED, headers=headers)
 
     # ---------- POST /projects/{id}/ : добавить элементы ----------
     #   Кастомный detail-action с пустым url_path → конечный URL тот же /{id}/
