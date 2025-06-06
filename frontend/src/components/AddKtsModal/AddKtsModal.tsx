@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Form, Input } from 'antd';
 import type { IItem } from '../../types/types';
-import { useAddCatalogUnitMutation } from '../../redux/services/catalogApi';
+import { useAddCatalogKtsMutation } from '../../redux/services/catalogApi';
 
 interface AddKtsModalProps {
     isModalOpen: boolean;
@@ -11,12 +11,12 @@ interface AddKtsModalProps {
 const AddKtsModal: React.FC<AddKtsModalProps> = ({ isModalOpen, onCancel }) => {
 
     const [form] = Form.useForm();
-    const [addUnit] = useAddCatalogUnitMutation();
+    const [addKts] = useAddCatalogKtsMutation();
 
     const handleOk = async () => {
         try {
             const values: IItem = await form.validateFields();
-            await addUnit({...values});
+            await addKts({...values});
             form.resetFields();
             onCancel()
         } catch (error) {
@@ -39,7 +39,7 @@ const AddKtsModal: React.FC<AddKtsModalProps> = ({ isModalOpen, onCancel }) => {
             <Form
                 form={form}
                 layout="vertical"
-                name="add_unit_form"
+                name="add_kts_form"
             >
                 <Form.Item
                     name="name"

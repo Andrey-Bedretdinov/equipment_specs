@@ -48,13 +48,25 @@ export interface IUnitCreate {
   description: string;
 }
 
+export interface IKtsCreate {
+  name: string;
+  description: string;
+}
+
 export interface IAddItemToUnit {
   id: number;
   items: { id: number, quantity: number }[]
 }
 
 export interface IAddUnitsAndItemsToKts {
+  kts_id: number;
+  items: { item_id: number, quantity: number }[]
+  units: { unit_id: number, quantity: number }[]
+}
+
+export interface IAddElementsToProjects {
   id: number;
   items: { id: number, quantity: number }[]
   units: { id: number, quantity: number }[]
+  kts: { id: number, quantity: number }[]
 }

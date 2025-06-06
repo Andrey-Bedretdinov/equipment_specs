@@ -3,11 +3,11 @@ import type { IUnit } from "../../types/types";
 
 const { Title, Text } = Typography;
 
-interface CatalogItemCardProps {
+interface CatalogUnitCardProps {
     unit: IUnit;
 }
 
-const CatalogUnitCard: React.FC<CatalogItemCardProps> = ({ unit }) => {
+const CatalogUnitCard: React.FC<CatalogUnitCardProps> = ({ unit }) => {
     return (
         <Card style={{
             backgroundColor: '#fafafa',

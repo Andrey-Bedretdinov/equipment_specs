@@ -3,11 +3,14 @@ import { useGetProjectByIdQuery } from "../../redux/services/projectsApi";
 import Loader from "../../components/Loader/Loader";
 import ItemCardsList from "../../components/ItemCardsList/ItemCardsList";
 import KtsCardsList from "../../components/KtsCardsList/KtsCardsList";
-import { Card, Typography } from "antd";
+import { Button, Card, Typography } from "antd";
+import { useState } from "react";
+import AddElementsToProjectModal from "../../components/AddElementsToProjectModal/AddElementsToProjectModal";
 
 const { Title, Text } = Typography;
 
 const ProjectPage: React.FC = () => {
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
     const { project_id } = useParams();
     const { data: project, isLoading, isError } = useGetProjectByIdQuery(project_id as string);
@@ -16,8 +19,20 @@ const ProjectPage: React.FC = () => {
         <Card
             title={
                 <>
-                    <Title>{project?.name}</Title>
-                    <Text>{project?.description}</Text><br/>
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between'
+                        }}
+                    >
+                        <Title>{project?.name}</Title>
+                        <Button 
+                            type="primary"
+                            onClick={() => setIsModalOpen(true)}
+                        >Добавить элемент</Button>
+                    </div>
+                    <Text>{project?.description}</Text><br />
                     <Text strong>Итоговая стоимость: {project?.price} ₽</Text>
                 </>
             }
@@ -31,6 +46,14 @@ const ProjectPage: React.FC = () => {
                     <KtsCardsList kts_list={project?.kts_list ?? []} />
                     <ItemCardsList items_list={project?.items_list ?? []} />
                 </>
+            )}
+
+            {isModalOpen && project && (
+                <AddElementsToProjectModal
+                    isModalOpen={isModalOpen}
+                    onCancel={() => setIsModalOpen(false)}
+                    projectId={project.id}
+                />
             )}
         </Card>
     );
