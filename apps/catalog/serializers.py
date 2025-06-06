@@ -250,3 +250,17 @@ class CatalogKTSSerializer(serializers.ModelSerializer):
         total += sum(Decimal(item.item.price) * item.quantity for item in kts_items)
 
         return f"{total:.2f}"
+
+
+class CatalogKTSCreateSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания КТС.
+
+    Поля:
+    - name: наименование КТС
+    - description: описание КТС
+    """
+
+    class Meta:
+        model = CatalogKTS
+        fields = ['name', 'description']
