@@ -13,7 +13,7 @@ const ItemCardsList: React.FC<ItemCardProps> = ({ items_list }) => {
     return (
         <>
             {(!items_list.length || !items_list) ? (
-                <Text>Проектов нет</Text>
+                <Text>Items нет</Text>
             ) : (
                 items_list.map((item) =>
                     <ItemCard key={item.id} item={item} />
