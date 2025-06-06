@@ -28,11 +28,17 @@ from .serializers import (
         request=CatalogItemCreateSerializer,
         responses={201: CatalogItemSerializer},
     ),
+    destroy=extend_schema(
+        summary="Удалить изделие",
+        description="Удаляет изделие и его связи из каталога.",
+        responses={204: None},
+    ),
 )
 class CatalogItemViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,  # <-- Добавляем только create
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
     queryset = CatalogItem.objects.all()
@@ -42,6 +48,20 @@ class CatalogItemViewSet(
         if self.action == 'create':
             return CatalogItemCreateSerializer
         return CatalogItemSerializer
+
+    def create(self, request, *args, **kwargs):
+        """
+        Переопределяем, чтобы  в ответе
+        вернуть **читаемый** сериализатор с id.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        # пересериализуем сохранённый объект
+        read_serializer = CatalogItemSerializer(serializer.instance)
+        headers = self.get_success_headers(read_serializer.data)
+        return Response(read_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 @extend_schema_view(
@@ -59,8 +79,18 @@ class CatalogItemViewSet(
         request=CatalogUnitCreateUpdateSerializer,
         responses={201: CatalogUnitSerializer}
     ),
+    destroy=extend_schema(
+        summary="Удалить юнит",
+        description="Удаляет юнит и связанные записи (изделия внутри юнита, ссылки в КТС).",
+        responses={204: None},
+    ),
 )
-class CatalogUnitViewSet(viewsets.ModelViewSet):
+class CatalogUnitViewSet(mixins.ListModelMixin,
+                         mixins.RetrieveModelMixin,
+                         mixins.CreateModelMixin,  # <-- Добавляем только create
+                         mixins.DestroyModelMixin,
+                         viewsets.GenericViewSet):
+
     queryset = CatalogUnit.objects.all()
     permission_classes = [AllowAny]
 
@@ -68,6 +98,16 @@ class CatalogUnitViewSet(viewsets.ModelViewSet):
         if self.action in ['create']:
             return CatalogUnitCreateUpdateSerializer
         return CatalogUnitSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        # «читаемый» сериализатор — уже с id
+        read_serializer = CatalogUnitSerializer(serializer.instance)
+        headers = self.get_success_headers(read_serializer.data)
+        return Response(read_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @extend_schema(
         request=AddItemsToUnitSerializer,
@@ -125,8 +165,18 @@ class CatalogUnitViewSet(viewsets.ModelViewSet):
         request=CatalogKTSCreateSerializer,
         responses={201: CatalogKTSSerializer}
     ),
+    destroy=extend_schema(
+        summary="Удалить КТС",
+        description="Удаляет КТС и все его связи (юниты и изделия).",
+        responses={204: None},
+    ),
 )
-class CatalogKTSViewSet(viewsets.ModelViewSet):
+class CatalogKTSViewSet(mixins.ListModelMixin,
+                        mixins.RetrieveModelMixin,
+                        mixins.CreateModelMixin,  # <-- Добавляем только create
+                        mixins.DestroyModelMixin,
+                        viewsets.GenericViewSet):
+
     queryset = CatalogKTS.objects.all()
     permission_classes = [AllowAny]
 
@@ -134,6 +184,15 @@ class CatalogKTSViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return CatalogKTSCreateSerializer
         return CatalogKTSSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        read_serializer = CatalogKTSSerializer(serializer.instance)
+        headers = self.get_success_headers(read_serializer.data)
+        return Response(read_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @extend_schema(
         request=AddElementsToKTSSerializer,
