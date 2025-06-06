@@ -1,10 +1,11 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import viewsets
+from rest_framework import viewsets, status, mixins
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
 from .models import Project
-from .serializers import ProjectSerializer, ProjectShortSerializer
+from .serializers import ProjectSerializer, ProjectShortSerializer, ProjectCreateSerializer
 
 
 @extend_schema_view(
@@ -28,18 +29,44 @@ from .serializers import ProjectSerializer, ProjectShortSerializer
         )
     ),
 )
-class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Вьюсет для работы с проектами.
-
-    Доступные операции:
-    - list: получить список всех проектов с вложенными данными (КТС, юниты, изделия)
-    - retrieve: получить подробную информацию об одном проекте по ID
-    """
-
+@extend_schema_view(
+    list=extend_schema(summary="Список проектов (полный)"),
+    retrieve=extend_schema(summary="Получить проект"),
+    create=extend_schema(
+        summary="Создать пустой проект",
+        request=ProjectCreateSerializer,
+        responses={201: ProjectSerializer},
+    ),
+    destroy=extend_schema(
+        summary="Удалить проект",
+        responses={204: None},
+    ),
+)
+class ProjectViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,  # ← добавили
+    mixins.DestroyModelMixin,  # ← добавили
+    viewsets.GenericViewSet,
+):
     queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
     permission_classes = [AllowAny]
+
+    # выбор сериализатора
+    def get_serializer_class(self):
+        if self.action == "create":
+            return ProjectCreateSerializer
+        return ProjectSerializer
+
+    # переопределяем create, чтобы вернуть «read»-сериализатор с id
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        read_serializer = ProjectSerializer(serializer.instance, context=self.get_serializer_context())
+        headers = self.get_success_headers(read_serializer.data)
+        return Response(read_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 @extend_schema(

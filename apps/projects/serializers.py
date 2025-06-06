@@ -217,3 +217,14 @@ class ProjectShortSerializer(serializers.ModelSerializer):
 
         final_price = round(total, 2)
         return f"{final_price:.2f}"
+
+
+class ProjectCreateSerializer(serializers.ModelSerializer):
+    """
+    Создать пустой проект.
+    Требуется только name; description опционален.
+    """
+
+    class Meta:
+        model = Project
+        fields = ["name", "description"]
