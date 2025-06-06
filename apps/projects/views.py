@@ -1,9 +1,25 @@
+# apps/projects/views.py
+"""
+Вью-модуль для работы с проектами.
+
+Маршруты (router создаёт их автоматически):
+
+GET    /projects/            – список (полный)
+POST   /projects/            – создать пустой проект
+GET    /projects/{id}/       – получить проект
+POST   /projects/{id}/       – добавить элементы                 ← кастомный @action
+PATCH  /projects/{id}/       – изменить quantity у элементов
+PUT    /projects/{id}/       – удалить элементы
+DELETE /projects/{id}/       – удалить проект
+GET    /projects/short/      – упрощённый список
+"""
 from __future__ import annotations
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, viewsets, status
+from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -18,7 +34,7 @@ from .serializers import (
 )
 
 # ------------------------ ProjectViewSet ------------------------ #
-@extend_schema_view(                           # нормальные подписи list / retrieve
+@extend_schema_view(
     list=extend_schema(summary="Получить список проектов"),
     retrieve=extend_schema(summary="Получить проект"),
     destroy=extend_schema(summary="Удалить проект", responses={204: None}),
@@ -26,18 +42,11 @@ from .serializers import (
 class ProjectViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,     # POST  /projects/        – пустой проект
-    mixins.UpdateModelMixin,     # PUT   /projects/{id}/   – remove elements
-                                 # PATCH /projects/{id}/   – update qty
-    mixins.DestroyModelMixin,    # DELETE /projects/{id}/  – delete project
+    mixins.CreateModelMixin,     # POST  /projects/
+    mixins.UpdateModelMixin,     # PUT & PATCH  /projects/{id}/
+    mixins.DestroyModelMixin,    # DELETE /projects/{id}/
     viewsets.GenericViewSet,
 ):
-    """
-    Дополнительные нестандартные операции:
-    * **POST   /projects/{id}/** – добавить элементы
-    * **PATCH  /projects/{id}/** – изменить quantity
-    * **PUT    /projects/{id}/** – удалить элементы
-    """
     queryset = Project.objects.all()
     permission_classes = [AllowAny]
     http_method_names = ["get", "post", "patch", "put", "delete", "head", "options"]
@@ -46,7 +55,7 @@ class ProjectViewSet(
     def get_serializer_class(self):
         if self.action == "create":
             return ProjectCreateSerializer
-        if self.request.method in ("POST", "PATCH", "PUT"):
+        if self.request.method in ("POST", "PATCH", "PUT") and self.action != "create":
             return ProjectElementsSerializer
         return ProjectSerializer
 
@@ -55,9 +64,11 @@ class ProjectViewSet(
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-    # ---------- POST /{id}/ : добавить элементы ----------
+    # ---------- POST /projects/{id}/ : добавить элементы ----------
+    #   Кастомный detail-action с пустым url_path → конечный URL тот же /{id}/
     @extend_schema(summary="Добавить элементы в проект", responses={200: ProjectSerializer})
-    def post(self, request, *args, **kwargs):
+    @action(detail=True, methods=["post"], url_path="", url_name="add_elements")
+    def add_elements(self, request, pk=None):
         project = self.get_object()
         data = self._validated_elements(request)
 
@@ -89,13 +100,13 @@ class ProjectViewSet(
         return Response(ProjectSerializer(project).data)
 
     # ---------- DELETE /{id}/ : удалить проект ----------
-    # summary задан через extend_schema_view сверху
+    # summary установлен в @extend_schema_view
 
     # ========== helpers ==========
     def _validated_elements(self, request):
-        ser = self.get_serializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        return ser.validated_data
+        serializer = ProjectElementsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return serializer.validated_data
 
     def _add_elements(self, project: Project, data: dict) -> None:
         def _bulk(source_qs, model, key, link_field):
@@ -139,7 +150,7 @@ class ProjectViewSet(
     responses={200: ProjectShortSerializer(many=True)},
 )
 class ProjectShortListView(ListAPIView):
-    """Короткий список без вложенных КТС, юнитов и изделий."""
+    """Короткий список без вложенных сущностей."""
     queryset = Project.objects.all()
     serializer_class = ProjectShortSerializer
     permission_classes = [AllowAny]
