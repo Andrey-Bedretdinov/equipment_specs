@@ -1,202 +1,145 @@
+from __future__ import annotations
+
+from django.db import transaction
+from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import viewsets, status, mixins
+from rest_framework import mixins, viewsets, status
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from apps.catalog.models import CatalogItem, CatalogUnit, CatalogKTS
 from .models import Project, ProjectItem, ProjectUnit, ProjectKTS
-from .serializers import ProjectSerializer, ProjectShortSerializer, ProjectCreateSerializer, ProjectElementsSerializer
-from ..catalog.models import CatalogItem, CatalogUnit, CatalogKTS
-
-
-@extend_schema_view(
-    list=extend_schema(
-        summary="Получить список проектов с вложенными данными",
-        description=(
-            "Возвращает полный список проектов.\n\n"
-            "Каждый проект включает вложенные сущности:\n"
-            "- КТС с вложенными юнитами и изделиями\n"
-            "- Юниты с вложенными изделиями\n"
-            "- Изделия, напрямую добавленные в проект\n\n"
-            "Позволяет получить всю иерархию проекта в одном запросе."
-        )
-    ),
-    retrieve=extend_schema(
-        summary="Получить подробную информацию о проекте",
-        description=(
-            "Возвращает детальную информацию о проекте по его ID.\n\n"
-            "Структура включает вложенные КТС, юниты и изделия проекта.\n"
-            "Полезно для отображения полной спецификации одного проекта."
-        )
-    ),
+from .serializers import (
+    ProjectSerializer,
+    ProjectShortSerializer,
+    ProjectCreateSerializer,
+    ProjectElementsSerializer,
 )
-@extend_schema_view(
-    list=extend_schema(summary="Список проектов (полный)"),
+
+# ------------------------ ProjectViewSet ------------------------ #
+@extend_schema_view(                           # нормальные подписи list / retrieve
+    list=extend_schema(summary="Получить список проектов"),
     retrieve=extend_schema(summary="Получить проект"),
-    create=extend_schema(
-        summary="Создать пустой проект",
-        request=ProjectCreateSerializer,
-        responses={201: ProjectSerializer},
-    ),
-    destroy=extend_schema(
-        summary="Удалить проект",
-        responses={204: None},
-    ),
+    destroy=extend_schema(summary="Удалить проект", responses={204: None}),
 )
 class ProjectViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,  # ← добавили
-    mixins.DestroyModelMixin,  # ← добавили
+    mixins.CreateModelMixin,     # POST  /projects/        – пустой проект
+    mixins.UpdateModelMixin,     # PUT   /projects/{id}/   – remove elements
+                                 # PATCH /projects/{id}/   – update qty
+    mixins.DestroyModelMixin,    # DELETE /projects/{id}/  – delete project
     viewsets.GenericViewSet,
 ):
+    """
+    Дополнительные нестандартные операции:
+    * **POST   /projects/{id}/** – добавить элементы
+    * **PATCH  /projects/{id}/** – изменить quantity
+    * **PUT    /projects/{id}/** – удалить элементы
+    """
     queryset = Project.objects.all()
     permission_classes = [AllowAny]
+    http_method_names = ["get", "post", "patch", "put", "delete", "head", "options"]
 
-    # выбор сериализатора
+    # ---------- выбор сериализатора ----------
     def get_serializer_class(self):
         if self.action == "create":
             return ProjectCreateSerializer
+        if self.request.method in ("POST", "PATCH", "PUT"):
+            return ProjectElementsSerializer
         return ProjectSerializer
 
-    # переопределяем create, чтобы вернуть «read»-сериализатор с id
+    # ---------- create: пустой проект ----------
+    @extend_schema(summary="Создать пустой проект", responses={201: ProjectSerializer})
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        return super().create(request, *args, **kwargs)
 
-        read_serializer = ProjectSerializer(serializer.instance, context=self.get_serializer_context())
-        headers = self.get_success_headers(read_serializer.data)
-        return Response(read_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    # ——— POST /projects/{id}/  →  «ADD» ———
-    @extend_schema(
-        summary="Добавить объекты в проект",
-        request=ProjectElementsSerializer,
-        responses={200: ProjectSerializer},
-        methods=["POST"],
-    )
-    def post(self, request, pk=None, *args, **kwargs):
+    # ---------- POST /{id}/ : добавить элементы ----------
+    @extend_schema(summary="Добавить элементы в проект", responses={200: ProjectSerializer})
+    def post(self, request, *args, **kwargs):
         project = self.get_object()
-        ser = ProjectElementsSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        v = ser.validated_data
+        data = self._validated_elements(request)
 
-        for obj in v.get("items", []):
-            ProjectItem.objects.create(
-                project=project,
-                item=CatalogItem.objects.get(id=obj["item_id"]),
-                quantity=obj.get("quantity", 1),
-            )
-
-        for obj in v.get("units", []):
-            ProjectUnit.objects.create(
-                project=project,
-                unit=CatalogUnit.objects.get(id=obj["unit_id"]),
-                quantity=obj.get("quantity", 1),
-            )
-
-        for obj in v.get("kts", []):
-            ProjectKTS.objects.create(
-                project=project,
-                kts=CatalogKTS.objects.get(id=obj["kts_id"]),
-                quantity=obj.get("quantity", 1),
-            )
+        with transaction.atomic():
+            self._add_elements(project, data)
 
         return Response(ProjectSerializer(project).data)
 
-    # ——— PATCH /projects/{id}/  →  «UPDATE quantity» ———
-    @extend_schema(
-        summary="Изменить количество объектов в проекте",
-        request=ProjectElementsSerializer,
-        responses={200: ProjectSerializer},
-        methods=["PATCH"],
-    )
-    def patch(self, request, pk=None, *args, **kwargs):
+    # ---------- PATCH /{id}/ : изменить количество ----------
+    @extend_schema(summary="Изменить quantity", responses={200: ProjectSerializer})
+    def partial_update(self, request, *args, **kwargs):
         project = self.get_object()
-        ser = ProjectElementsSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        v = ser.validated_data
+        data = self._validated_elements(request)
 
-        def _update(qs, id_field, obj_key):
-            for o in v.get(obj_key, []):
-                inst = qs.get(**{id_field: o[f"{obj_key[:-1]}_id"]})
-                inst.quantity = o["quantity"]
-                inst.save()
-
-        _update(ProjectItem.objects.filter(project=project), "item_id", "items")
-        _update(ProjectUnit.objects.filter(project=project), "unit_id", "units")
-        _update(ProjectKTS.objects.filter(project=project), "kts_id", "kts")
+        with transaction.atomic():
+            self._update_quantity(project, data)
 
         return Response(ProjectSerializer(project).data)
 
-    # ---------- PUT  /projects/{id}/  → удалить элементы ----------
-    @extend_schema(
-        summary="Удалить указанные элементы из проекта",
-        request=ProjectElementsSerializer,
-        responses={200: ProjectSerializer},
-        methods=["PUT"],
-    )
-    def put(self, request, pk=None, *args, **kwargs):
+    # ---------- PUT /{id}/ : удалить элементы ----------
+    @extend_schema(summary="Удалить элементы из проекта", responses={200: ProjectSerializer})
+    def update(self, request, *args, **kwargs):
         project = self.get_object()
-        ser = ProjectElementsSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        v = ser.validated_data
+        data = self._validated_elements(request)
 
-        # items
-        if "items" in v:
-            ids = [o["item_id"] for o in v["items"]]
-            ProjectItem.objects.filter(project=project, item_id__in=ids).delete()
-
-        # units
-        if "units" in v:
-            ids = [o["unit_id"] for o in v["units"]]
-            ProjectUnit.objects.filter(project=project, unit_id__in=ids).delete()
-
-        # kts
-        if "kts" in v:
-            ids = [o["kts_id"] for o in v["kts"]]
-            ProjectKTS.objects.filter(project=project, kts_id__in=ids).delete()
+        with transaction.atomic():
+            self._remove_elements(project, data)
 
         return Response(ProjectSerializer(project).data)
 
-    # ---------- DELETE  /projects/{id}/  → удалить проект ----------
-    @extend_schema(
-        summary="Удалить проект",
-        request=ProjectElementsSerializer,
-        responses={200: ProjectSerializer, 204: None},
-        methods=["DELETE"],
-    )
-    def delete(self, request, pk=None, *args, **kwargs):
-        project = self.get_object()
-        self.perform_destroy(project)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    # ---------- DELETE /{id}/ : удалить проект ----------
+    # summary задан через extend_schema_view сверху
+
+    # ========== helpers ==========
+    def _validated_elements(self, request):
+        ser = self.get_serializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        return ser.validated_data
+
+    def _add_elements(self, project: Project, data: dict) -> None:
+        def _bulk(source_qs, model, key, link_field):
+            objs = [
+                model(
+                    project=project,
+                    **{link_field: get_object_or_404(source_qs, id=obj[f"{key[:-1]}_id"])},
+                    quantity=obj.get("quantity", 1),
+                )
+                for obj in data.get(key, [])
+            ]
+            model.objects.bulk_create(objs)
+
+        _bulk(CatalogItem.objects, ProjectItem, "items", "item")
+        _bulk(CatalogUnit.objects, ProjectUnit, "units", "unit")
+        _bulk(CatalogKTS.objects,  ProjectKTS,  "kts",  "kts")
+
+    def _update_quantity(self, project: Project, data: dict) -> None:
+        def _apply(qs, key, id_field):
+            for obj in data.get(key, []):
+                qs.filter(**{id_field: obj[f"{key[:-1]}_id"]}).update(quantity=obj["quantity"])
+
+        _apply(ProjectItem.objects.filter(project=project), "items", "item_id")
+        _apply(ProjectUnit.objects.filter(project=project), "units", "unit_id")
+        _apply(ProjectKTS.objects.filter(project=project),  "kts",  "kts_id")
+
+    def _remove_elements(self, project: Project, data: dict) -> None:
+        def _delete(qs, key, id_field):
+            ids = [obj[f"{key[:-1]}_id"] for obj in data.get(key, [])]
+            if ids:
+                qs.filter(**{f"{id_field}__in": ids}).delete()
+
+        _delete(ProjectItem.objects.filter(project=project), "items", "item_id")
+        _delete(ProjectUnit.objects.filter(project=project), "units", "unit_id")
+        _delete(ProjectKTS.objects.filter(project=project),  "kts",  "kts_id")
 
 
+# ------------------- ProjectShortListView ------------------- #
 @extend_schema(
     summary="Получить упрощённый список проектов",
-    description=(
-        "Возвращает краткую информацию о всех проектах без вложенных сущностей.\n\n"
-        "Только основные данные:\n"
-        "- ID проекта\n"
-        "- Наименование\n"
-        "- Описание\n"
-        "- Итоговая стоимость проекта\n\n"
-        "Полезно для списков, выборок и фильтрации проектов без лишних вложений."
-    ),
-    responses={200: ProjectShortSerializer(many=True)}
+    responses={200: ProjectShortSerializer(many=True)},
 )
 class ProjectShortListView(ListAPIView):
-    """
-    Список проектов без вложенных сущностей.
-
-    Доступные данные:
-    - ID проекта
-    - Название проекта
-    - Описание проекта
-    - Итоговая стоимость проекта
-    """
-
+    """Короткий список без вложенных КТС, юнитов и изделий."""
     queryset = Project.objects.all()
     serializer_class = ProjectShortSerializer
     permission_classes = [AllowAny]
