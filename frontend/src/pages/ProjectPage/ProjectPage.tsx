@@ -6,6 +6,7 @@ import KtsCardsList from "../../components/KtsCardsList/KtsCardsList";
 import { Button, Card, Typography } from "antd";
 import { useState } from "react";
 import AddElementsToProjectModal from "../../components/AddElementsToProjectModal/AddElementsToProjectModal";
+import UnitCardsList from "../../components/UnitCardsList/UnitCardsList";
 
 const { Title, Text } = Typography;
 
@@ -37,13 +38,12 @@ const ProjectPage: React.FC = () => {
                 </>
             }
         >
-
-
             {(isLoading || isError) ? (
                 <Loader isLoading={isLoading} isError={isError} />
             ) : (
                 <>
                     <KtsCardsList kts_list={project?.kts_list ?? []} />
+                    <UnitCardsList units_list={project?.units_list ?? []}/>
                     <ItemCardsList items_list={project?.items_list ?? []} />
                 </>
             )}

@@ -1,22 +1,22 @@
 import React from 'react';
 import { Modal, Form, Input } from 'antd';
-import type { IUnit } from '../../types/types';
-import { useAddCatalogUnitMutation } from '../../redux/services/catalogApi';
+import type { IProject } from '../../types/types';
+import { useAddProjectMutation } from '../../redux/services/projectsApi';
 
-interface AddUnitModalProps {
+interface AddProjectModalProps {
     isModalOpen: boolean;
     onCancel: () => void;
 }
 
-const AddUnitModal: React.FC<AddUnitModalProps> = ({ isModalOpen, onCancel }) => {
+const AddProjectModal: React.FC<AddProjectModalProps> = ({ isModalOpen, onCancel }) => {
 
     const [form] = Form.useForm();
-    const [addUnit] = useAddCatalogUnitMutation();
+    const [addProject] = useAddProjectMutation();
 
     const handleOk = async () => {
         try {
-            const values: IUnit = await form.validateFields();
-            await addUnit({...values});
+            const values: IProject = await form.validateFields();
+            await addProject({...values});
             form.resetFields();
             onCancel()
         } catch (error) {
@@ -26,7 +26,7 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({ isModalOpen, onCancel }) =>
 
     return (
         <Modal
-            title="Добавить Unit"
+            title="Добавить Проект"
             open={isModalOpen}
             onCancel={() => {
                 form.resetFields();
@@ -39,7 +39,7 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({ isModalOpen, onCancel }) =>
             <Form
                 form={form}
                 layout="vertical"
-                name="add_unit_form"
+                name="add_project_form"
             >
                 <Form.Item
                     name="name"
@@ -61,4 +61,4 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({ isModalOpen, onCancel }) =>
     );
 };
 
-export default AddUnitModal;
+export default AddProjectModal;

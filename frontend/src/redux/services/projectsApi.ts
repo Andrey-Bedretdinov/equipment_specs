@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { IProject } from '../../types/types'
+import type { IProject, IProjectCreate } from '../../types/types'
 
 const username = 'admin'
 const password = 'admin'
@@ -26,10 +26,20 @@ export const projectsApi = createApi({
       query: (id: string) => `projects/${id}`,
       providesTags: ['Projects'],
     }),
+
+    addProject: builder.mutation<IProject, IProjectCreate>({
+      query: (newProject) => ({
+        url: 'projects/',
+        method: 'POST',
+        body: newProject,
+      }),
+      invalidatesTags: ['Projects'],
+    }),
   }),
 })
 
 export const {
   useGetProjectsQuery,
   useGetProjectByIdQuery,
+  useAddProjectMutation,
 } = projectsApi
