@@ -15,11 +15,11 @@
     width: 100%;
     margin-bottom: 16px;
     background-color: #fafafa;
-    border-left: 4px solid #52c41a;
+    border-left: 4px solid #1890ff;
     box-Shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.btnBox{
+.btnBox {
     display: flex;
     align-items: center;
     gap: 8px;

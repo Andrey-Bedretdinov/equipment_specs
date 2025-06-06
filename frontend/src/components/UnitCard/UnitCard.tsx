@@ -1,5 +1,5 @@
 import { Button, Card, Typography } from "antd";
-import { DownOutlined, RightOutlined, EditOutlined } from '@ant-design/icons';
+import { DownOutlined, RightOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { IUnit } from "../../types/types";
 import ItemCardsList from "../ItemCardsList/ItemCardsList";
 import { useState } from "react";
@@ -11,18 +11,28 @@ const { Text, Title } = Typography;
 
 interface UnitCardProps {
     unit: IUnit;
+    canDelete?: boolean;
 }
-const UnitCard: React.FC<UnitCardProps> = ({ unit }) => {
+
+const UnitCard: React.FC<UnitCardProps> = ({ unit, canDelete = true }) => {
 
     const [collapsed, setCollapsed] = useState<boolean>(true);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
     const location = useLocation();
-    const isEditable = location.pathname.startsWith('/catalog');
+    const isProject = location.pathname.startsWith('/project');
+    const isCatalogUnitsPage = location.pathname.startsWith('/catalog/units');
+    const isCatalogKtsPage = location.pathname.startsWith('/catalog/kts');
 
     const toggleCollapse = () => {
         setCollapsed(prev => !prev);
     };
+
+    const handleDelete = () => {
+        if (isCatalogUnitsPage) console.log('Удаление Юнита из каталога юнитов')
+        else if (isCatalogKtsPage) console.log('Уделение Юнита из каталога ктс')
+        else if (isProject) console.log('Удаление Юнита из проекта')
+    }
 
     return (
         <Card
@@ -40,19 +50,36 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit }) => {
                             <Text strong>Итоговая стоимость: {unit.price} RUB</Text>
                         </div>
 
-                        {isEditable && (
-                            <Button
-                                type="primary"
-                                icon={<EditOutlined />}
-                                onClick={() => setIsModalOpen(true)}
-                            />
-                        )}
+
+                        <div className={styles.btnBox}>
+                            {isCatalogUnitsPage && (
+                                <Button
+                                    type="primary"
+                                    icon={<EditOutlined />}
+                                    onClick={() => setIsModalOpen(true)}
+                                />
+                            )}
+
+                            {canDelete && (
+                                <Button
+                                    type="primary"
+                                    danger
+                                    icon={<DeleteOutlined />}
+                                    onClick={handleDelete}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             }
             className={styles.card}
         >
-            {!collapsed && <ItemCardsList items_list={unit.items_list ?? []} />}
+            {!collapsed &&
+                <ItemCardsList
+                    canDelete={isCatalogKtsPage || isProject ? false : true}
+                    items_list={unit.items_list ?? []}
+                />
+            }
 
             {isModalOpen &&
                 <AddItemToUnitModal
