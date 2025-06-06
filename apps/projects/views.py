@@ -34,6 +34,10 @@ from .serializers import (
 )
 
 
+def _pk_key(key: str) -> str:
+    """items → item_id ; units → unit_id ; kts → kts_id"""
+    return "kts_id" if key == "kts" else f"{key[:-1]}_id"
+
 # ------------------------ ProjectViewSet ------------------------ #
 @extend_schema_view(
     list=extend_schema(summary="Получить список проектов"),
@@ -118,10 +122,11 @@ class ProjectViewSet(
 
     def _add_elements(self, project: Project, data: dict) -> None:
         def _bulk(source_qs, model, key, link_field):
+            id_field = _pk_key(key)
             objs = [
                 model(
                     project=project,
-                    **{link_field: get_object_or_404(source_qs, id=obj[f"{key[:-1]}_id"])},
+                    **{link_field: get_object_or_404(source_qs, id=obj[id_field])},
                     quantity=obj.get("quantity", 1),
                 )
                 for obj in data.get(key, [])
@@ -130,26 +135,27 @@ class ProjectViewSet(
 
         _bulk(CatalogItem.objects, ProjectItem, "items", "item")
         _bulk(CatalogUnit.objects, ProjectUnit, "units", "unit")
-        _bulk(CatalogKTS.objects,  ProjectKTS,  "kts",  "kts")
+        _bulk(CatalogKTS.objects, ProjectKTS, "kts", "kts")
 
     def _update_quantity(self, project: Project, data: dict) -> None:
         def _apply(qs, key, id_field):
+            id_key = _pk_key(key)
             for obj in data.get(key, []):
-                qs.filter(**{id_field: obj[f"{key[:-1]}_id"]}).update(quantity=obj["quantity"])
+                qs.filter(**{id_field: obj[id_key]}).update(quantity=obj["quantity"])
 
         _apply(ProjectItem.objects.filter(project=project), "items", "item_id")
         _apply(ProjectUnit.objects.filter(project=project), "units", "unit_id")
-        _apply(ProjectKTS.objects.filter(project=project),  "kts",  "kts_id")
+        _apply(ProjectKTS.objects.filter(project=project), "kts", "kts_id")
 
     def _remove_elements(self, project: Project, data: dict) -> None:
         def _delete(qs, key, id_field):
-            ids = [obj[f"{key[:-1]}_id"] for obj in data.get(key, [])]
+            ids = [o[_pk_key(key)] for o in data.get(key, [])]
             if ids:
                 qs.filter(**{f"{id_field}__in": ids}).delete()
 
         _delete(ProjectItem.objects.filter(project=project), "items", "item_id")
         _delete(ProjectUnit.objects.filter(project=project), "units", "unit_id")
-        _delete(ProjectKTS.objects.filter(project=project),  "kts",  "kts_id")
+        _delete(ProjectKTS.objects.filter(project=project), "kts", "kts_id")
 
 
 # ------------------- ProjectShortListView ------------------- #
