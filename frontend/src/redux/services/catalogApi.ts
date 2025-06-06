@@ -1,11 +1,13 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { 
-  IAddItemToUnit, 
-  IItem, 
-  IItemCreate, 
-  IKts, 
-  IUnit, 
-  IUnitCreate 
+import type {
+  IAddItemToUnit,
+  IAddUnitsAndItemsToKts,
+  IItem,
+  IItemCreate,
+  IKts,
+  IKtsCreate,
+  IUnit,
+  IUnitCreate
 } from '../../types/types'
 
 const username = 'admin'
@@ -55,11 +57,50 @@ export const catalogApi = createApi({
       }),
       invalidatesTags: ['Units'],
     }),
-    addCatalogItemsToUnit: builder.mutation<IItem[], IAddItemToUnit>({
+    addCatalogItemsToUnit: builder.mutation<IUnit, IAddItemToUnit>({
       query: (newUnitData) => ({
         url: 'catalog/units/add-items/',
         method: 'POST',
         body: newUnitData,
+      }),
+      invalidatesTags: ['Units'],
+    }),
+    addCatalogKts: builder.mutation<IKts, IKtsCreate>({
+      query: (newKts) => ({
+        url: 'catalog/kts/',
+        method: 'POST',
+        body: newKts,
+      }),
+      invalidatesTags: ['Kts'],
+    }),
+    addUnitsAndItemsToKts: builder.mutation<IKts, IAddUnitsAndItemsToKts>({
+      query: (newKtsData) => ({
+        url: 'catalog/kts/add-elements/',
+        method: 'POST',
+        body: newKtsData,
+      }),
+      invalidatesTags: ['Kts'],
+    }),
+
+
+    deleteItem: builder.mutation<void, number>({
+      query: (id: number) => ({
+        url: `catalog/items/${id}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Items'],
+    }),
+    deleteKts: builder.mutation<void, number>({
+      query: (id: number) => ({
+        url: `catalog/kts/${id}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Kts'],
+    }),
+    deleteUnit: builder.mutation<void, number>({
+      query: (id: number) => ({
+        url: `catalog/units/${id}/`,
+        method: 'DELETE',
       }),
       invalidatesTags: ['Units'],
     }),
@@ -72,5 +113,10 @@ export const {
   useGetCatalogItemsQuery,
   useAddCatalogItemMutation,
   useAddCatalogUnitMutation,
-  useAddCatalogItemsToUnitMutation
+  useAddCatalogItemsToUnitMutation,
+  useAddCatalogKtsMutation,
+  useAddUnitsAndItemsToKtsMutation,
+  useDeleteItemMutation,
+  useDeleteKtsMutation,
+  useDeleteUnitMutation,
 } = catalogApi

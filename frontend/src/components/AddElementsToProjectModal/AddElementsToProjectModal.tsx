@@ -1,51 +1,56 @@
 import React, { useState } from 'react';
 import { Modal, Input, Tabs } from 'antd';
-import type { IAddUnitsAndItemsToKts } from '../../types/types';
+import type { IAddOrDeleteElementsToProjects } from '../../types/types';
 import {
-    useAddUnitsAndItemsToKtsMutation,
     useGetCatalogItemsQuery,
     useGetCatalogUnitsQuery,
+    useGetCatalogKtsQuery,
 } from '../../redux/services/catalogApi';
 import CatalogItemCard from '../CatalogItemCard/CatalogItemCard';
 import CatalogUnitCard from '../CatalogUnitCard/CatalogUnitCard';
+import CatalogKtsCard from '../CatalogKtsCard/CatalogKtsCard';
 import Loader from '../Loader/Loader';
+import { useAddElementsToProjectMutation } from '../../redux/services/projectsApi';
 
-interface AddUnitModalProps {
+interface AddElementsModalProps {
     isModalOpen: boolean;
     onCancel: () => void;
-    ktsId: number;
+    projectId: number;
 }
 
-type ITab = 'items' | 'units';
+type ITab = 'items' | 'units' | 'kts';
 
-const AddUnitsAndItemsToKtsModal: React.FC<AddUnitModalProps> = ({
+const AddElementsToProjectModal: React.FC<AddElementsModalProps> = ({
     isModalOpen,
     onCancel,
-    ktsId,
+    projectId
 }) => {
     const [selectedItems, setSelectedItems] = useState<{ item_id: number; quantity: number }[]>([]);
     const [selectedUnits, setSelectedUnits] = useState<{ unit_id: number; quantity: number }[]>([]);
+    const [selectedKts, setSelectedKts] = useState<{ kts_id: number; quantity: number }[]>([]);
     const [activeTab, setActiveTab] = useState<ITab>('items');
 
     const { data: items, isError: isItemsError, isLoading: isItemsLoading } = useGetCatalogItemsQuery();
     const { data: units, isError: isUnitsError, isLoading: isUnitsLoading } = useGetCatalogUnitsQuery();
-    const [addUnitsAndItems] = useAddUnitsAndItemsToKtsMutation();
+    const { data: kts, isError: isKtsError, isLoading: isKtsLoading } = useGetCatalogKtsQuery();
+    const [addElementsToProject] = useAddElementsToProjectMutation();
 
     const handleOk = async () => {
-        if (selectedItems.length === 0 && selectedUnits.length === 0) {
-            alert('Выберите хотя бы один Item или Unit');
+        if (selectedItems.length === 0 && selectedUnits.length === 0 && selectedKts.length === 0) {
+            alert('Выберите хотя бы один Item, Unit или KTS');
             return;
         }
 
         try {
-            const postData: IAddUnitsAndItemsToKts = {
-                kts_id: ktsId,
-                items: selectedItems.map(({ item_id, quantity }) => ({ item_id, quantity })),
-                units: selectedUnits.map(({ unit_id, quantity }) => ({ unit_id, quantity })),
+            const postData: IAddOrDeleteElementsToProjects = {
+                items: selectedItems,
+                units: selectedUnits,
+                kts: selectedKts,
             };
-            await addUnitsAndItems(postData)
+            addElementsToProject({id: projectId, ...postData})
             setSelectedItems([]);
             setSelectedUnits([]);
+            setSelectedKts([]);
             onCancel();
         } catch (error) {
             console.error('Ошибка при добавлении:', error);
@@ -53,50 +58,63 @@ const AddUnitsAndItemsToKtsModal: React.FC<AddUnitModalProps> = ({
     };
 
     const toggleSelection = (id: number, type: ITab) => {
-        if (type === 'items') {
-            const exists = selectedItems.some((el) => el.item_id === id);
-            const updated = exists
-                ? selectedItems.filter((el) => el.item_id !== id)
-                : [...selectedItems, { item_id: id, quantity: 1 }];
-            setSelectedItems(updated);
-        } else {
-            const exists = selectedUnits.some((el) => el.unit_id === id);
-            const updated = exists
-                ? selectedUnits.filter((el) => el.unit_id !== id)
-                : [...selectedUnits, { unit_id: id, quantity: 1 }];
-            setSelectedUnits(updated);
+        switch (type) {
+            case 'items':
+                setSelectedItems(prev =>
+                    prev.some(el => el.item_id === id)
+                        ? prev.filter(el => el.item_id !== id)
+                        : [...prev, { item_id: id, quantity: 1 }]
+                );
+                break;
+            case 'units':
+                setSelectedUnits(prev =>
+                    prev.some(el => el.unit_id === id)
+                        ? prev.filter(el => el.unit_id !== id)
+                        : [...prev, { unit_id: id, quantity: 1 }]
+                );
+                break;
+            case 'kts':
+                setSelectedKts(prev =>
+                    prev.some(el => el.kts_id === id)
+                        ? prev.filter(el => el.kts_id !== id)
+                        : [...prev, { kts_id: id, quantity: 1 }]
+                );
+                break;
         }
     };
 
     const changeQuantity = (id: number, quantity: number, type: ITab) => {
         if (quantity < 1) return;
-
-        if (type === 'items') {
-            setSelectedItems(
-                selectedItems.map((el) =>
-                    el.item_id === id ? { ...el, quantity } : el
-                )
-            );
-        } else {
-            setSelectedUnits(
-                selectedUnits.map((el) =>
-                    el.unit_id === id ? { ...el, quantity } : el
-                )
-            );
+        switch (type) {
+            case 'items':
+                setSelectedItems(prev =>
+                    prev.map(el => (el.item_id === id ? { ...el, quantity } : el))
+                );
+                break;
+            case 'units':
+                setSelectedUnits(prev =>
+                    prev.map(el => (el.unit_id === id ? { ...el, quantity } : el))
+                );
+                break;
+            case 'kts':
+                setSelectedKts(prev =>
+                    prev.map(el => (el.kts_id === id ? { ...el, quantity } : el))
+                );
+                break;
         }
     };
 
     const renderSelectableList = <T extends { id: number }>(
         data: T[] | undefined,
-        selectedList: { item_id?: number; unit_id?: number; quantity: number }[],
+        selectedList: { item_id?: number; unit_id?: number; kts_id?: number; quantity: number }[],
         type: ITab,
         renderCard: (item: T) => React.ReactNode,
         selectedColor: string
     ) => {
         return data?.map((item) => {
-            const key = type === 'items' ? 'item_id' : 'unit_id';
-            const isSelected = selectedList.some((el) => el[key] === item.id);
-            const quantity = selectedList.find((el) => el[key] === item.id)?.quantity || 1;
+            const itemIdKey = type === 'items' ? 'item_id' : type === 'units' ? 'unit_id' : 'kts_id';
+            const isSelected = selectedList.some((el) => el[itemIdKey] === item.id);
+            const quantity = selectedList.find((el) => el[itemIdKey] === item.id)?.quantity || 1;
 
             return (
                 <div
@@ -129,15 +147,16 @@ const AddUnitsAndItemsToKtsModal: React.FC<AddUnitModalProps> = ({
     const handleCancel = () => {
         setSelectedItems([]);
         setSelectedUnits([]);
+        setSelectedKts([]);
         onCancel();
     };
 
-    const isLoading = isItemsLoading || isUnitsLoading;
-    const isError = isItemsError || isUnitsError;
+    const isLoading = isItemsLoading || isUnitsLoading || isKtsLoading;
+    const isError = isItemsError || isUnitsError || isKtsError;
 
     return (
         <Modal
-            title="Добавить Items и Units в KTS"
+            title="Добавить элементы в KTS"
             open={isModalOpen}
             onCancel={handleCancel}
             onOk={handleOk}
@@ -151,6 +170,7 @@ const AddUnitsAndItemsToKtsModal: React.FC<AddUnitModalProps> = ({
                 items={[
                     { key: 'items', label: 'Items' },
                     { key: 'units', label: 'Units' },
+                    { key: 'kts', label: 'KTS' },
                 ]}
             />
 
@@ -158,20 +178,29 @@ const AddUnitsAndItemsToKtsModal: React.FC<AddUnitModalProps> = ({
                 <Loader isLoading={isLoading} isError={isError} />
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {activeTab === 'items'
-                        ? renderSelectableList(
+                    {activeTab === 'items' &&
+                        renderSelectableList(
                             items,
                             selectedItems,
                             'items',
                             (item) => <CatalogItemCard item={item} />,
                             '#1890ff'
-                        )
-                        : renderSelectableList(
+                        )}
+                    {activeTab === 'units' &&
+                        renderSelectableList(
                             units,
                             selectedUnits,
                             'units',
                             (unit) => <CatalogUnitCard unit={unit} />,
                             '#52c41a'
+                        )}
+                    {activeTab === 'kts' &&
+                        renderSelectableList(
+                            kts,
+                            selectedKts,
+                            'kts',
+                            (kt) => <CatalogKtsCard kts={kt} />,
+                            '#faad14'
                         )}
                 </div>
             )}
@@ -179,4 +208,4 @@ const AddUnitsAndItemsToKtsModal: React.FC<AddUnitModalProps> = ({
     );
 };
 
-export default AddUnitsAndItemsToKtsModal;
+export default AddElementsToProjectModal;

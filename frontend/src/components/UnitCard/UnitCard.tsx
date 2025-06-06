@@ -5,8 +5,10 @@ import ItemCardsList from "../ItemCardsList/ItemCardsList";
 import { useState } from "react";
 
 import styles from './UnitCard.module.css';
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import AddItemToUnitModal from "../AddItemToUnitModal/AddItemToUnitModal";
+import { useDeleteUnitMutation } from "../../redux/services/catalogApi";
+import { useDeleteElementsFromProjectMutation } from "../../redux/services/projectsApi";
 const { Text, Title } = Typography;
 
 interface UnitCardProps {
@@ -18,6 +20,10 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, canDelete = true }) => {
 
     const [collapsed, setCollapsed] = useState<boolean>(true);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const { project_id } = useParams();
+
+    const [deleteUnit] = useDeleteUnitMutation();
+    const [deleteItemFromProject] = useDeleteElementsFromProjectMutation();
 
     const location = useLocation();
     const isProject = location.pathname.startsWith('/project');
@@ -29,9 +35,13 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, canDelete = true }) => {
     };
 
     const handleDelete = () => {
-        if (isCatalogUnitsPage) console.log('Удаление Юнита из каталога юнитов')
-        else if (isCatalogKtsPage) console.log('Уделение Юнита из каталога ктс')
-        else if (isProject) console.log('Удаление Юнита из проекта')
+        if (isCatalogUnitsPage) {
+            deleteUnit(unit.id);
+        } else if (isCatalogKtsPage) {
+            console.log('Уделение Юнита из каталога ктс')
+        } else if (isProject && project_id) {
+            deleteItemFromProject({ project_id: project_id, units: [{ unit_id: unit.id }] })
+        }
     }
 
     return (
