@@ -7,6 +7,7 @@ import { useState } from "react";
 import styles from './UnitCard.module.css';
 import { useLocation } from "react-router-dom";
 import AddItemToUnitModal from "../AddItemToUnitModal/AddItemToUnitModal";
+import { useDeleteUnitMutation } from "../../redux/services/catalogApi";
 const { Text, Title } = Typography;
 
 interface UnitCardProps {
@@ -19,6 +20,8 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, canDelete = true }) => {
     const [collapsed, setCollapsed] = useState<boolean>(true);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
+    const [deleteUnit] = useDeleteUnitMutation();
+
     const location = useLocation();
     const isProject = location.pathname.startsWith('/project');
     const isCatalogUnitsPage = location.pathname.startsWith('/catalog/units');
@@ -29,7 +32,7 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, canDelete = true }) => {
     };
 
     const handleDelete = () => {
-        if (isCatalogUnitsPage) console.log('Удаление Юнита из каталога юнитов')
+        if (isCatalogUnitsPage) deleteUnit(unit.id);
         else if (isCatalogKtsPage) console.log('Уделение Юнита из каталога ктс')
         else if (isProject) console.log('Удаление Юнита из проекта')
     }

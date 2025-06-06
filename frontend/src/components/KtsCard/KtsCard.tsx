@@ -8,6 +8,7 @@ import { useLocation } from "react-router-dom";
 
 import styles from './KtsCard.module.css';
 import AddUnitsAndItemsToKtsModal from "../AddUnitsAndItemsToKtsModal/AddUnitsAndItemsToKtsModal";
+import { useDeleteKtsMutation } from "../../redux/services/catalogApi";
 
 const { Text, Title } = Typography;
 
@@ -19,9 +20,16 @@ const KtsCard: React.FC<KtsCardProps> = ({ kts }) => {
     const [collapsed, setCollapsed] = useState<boolean>(true);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
+    const [deleteKts] = useDeleteKtsMutation();
+
     const toggleCollapse = () => {
         setCollapsed(prev => !prev);
     };
+
+        const handleDelete = () => {
+        if (isCatalogKtsPage) deleteKts(kts.id)
+        else if (isProject) console.log('Удаление ктс из проекта')
+    }
 
     const location = useLocation();
     const isProject = location.pathname.startsWith('/project');
@@ -55,7 +63,7 @@ const KtsCard: React.FC<KtsCardProps> = ({ kts }) => {
                                 type="primary"
                                 danger
                                 icon={<DeleteOutlined />}
-                                // onClick={handleDelete}
+                                onClick={handleDelete}
                             />
                         </div>
                     </div>

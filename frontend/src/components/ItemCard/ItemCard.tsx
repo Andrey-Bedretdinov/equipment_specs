@@ -5,6 +5,7 @@ import type { IItem } from '../../types/types';
 import { useLocation } from 'react-router-dom';
 
 import styles from './ItemCard.module.css';
+import { useDeleteItemMutation } from '../../redux/services/catalogApi';
 
 
 const { Text } = Typography;
@@ -18,6 +19,8 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, canDelete = true }) => {
 
     const [collapsed, setCollapsed] = useState<boolean>(true);
 
+    const [deleteItem] = useDeleteItemMutation();
+
     const location = useLocation();
     const isProject = location.pathname.startsWith('/project');
     const isCatalogItemsPage = location.pathname.startsWith('/catalog/items');
@@ -29,7 +32,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, canDelete = true }) => {
     };
 
     const handleDelete = () => {
-        if (isCatalogItemsPage) console.log('Удаление Итема из каталога итемов')
+        if (isCatalogItemsPage) deleteItem(item.id)
         else if (isCatalogUnitsPage) console.log('Удаление Итема из каталога юнитов')
         else if (isCatalogKtsPage) console.log('Уделение Итема из каталога ктс')
         else if (isProject) console.log('Удаление Итема из проекта')

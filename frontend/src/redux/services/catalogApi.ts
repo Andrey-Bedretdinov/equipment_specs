@@ -81,6 +81,29 @@ export const catalogApi = createApi({
       }),
       invalidatesTags: ['Kts'],
     }),
+
+
+    deleteItem: builder.mutation<void, number>({
+      query: (id: number) => ({
+        url: `catalog/items/${id}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Items'],
+    }),
+    deleteKts: builder.mutation<void, number>({
+      query: (id: number) => ({
+        url: `catalog/kts/${id}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Kts'],
+    }),
+    deleteUnit: builder.mutation<void, number>({
+      query: (id: number) => ({
+        url: `catalog/units/${id}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Units'],
+    }),
   }),
 })
 
@@ -93,4 +116,7 @@ export const {
   useAddCatalogItemsToUnitMutation,
   useAddCatalogKtsMutation,
   useAddUnitsAndItemsToKtsMutation,
+  useDeleteItemMutation,
+  useDeleteKtsMutation,
+  useDeleteUnitMutation,
 } = catalogApi
