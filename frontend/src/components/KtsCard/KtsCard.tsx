@@ -4,6 +4,7 @@ import type { IKts } from "../../types/types";
 import UnitCardsList from "../UnitCardsList/UnitCardsList";
 import ItemCardsList from "../ItemCardsList/ItemCardsList";
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 const { Text, Title } = Typography;
 
 interface KtsCardProps {
@@ -16,6 +17,9 @@ const KtsCard: React.FC<KtsCardProps> = ({ kts }) => {
     const toggleCollapse = () => {
         setCollapsed(prev => !prev);
     };
+
+    const location = useLocation();
+    const isProject = location.pathname.startsWith('/project');
 
     return (
         <Card
@@ -30,7 +34,7 @@ const KtsCard: React.FC<KtsCardProps> = ({ kts }) => {
                     />
                     <div>
                         <Title level={2}>{kts.name}</Title>
-                        <Text>{kts.description}</Text><br/>
+                        <Text>{kts.description}</Text><br />
                         <Text strong>Итоговая стоимость: {kts.price} RUB</Text>
                     </div>
                 </div>
@@ -45,8 +49,14 @@ const KtsCard: React.FC<KtsCardProps> = ({ kts }) => {
         >
             {!collapsed && (
                 <>
-                    <UnitCardsList units_list={kts.units_list ?? []} />
-                    <ItemCardsList items_list={kts.items_list ?? []} />
+                    <UnitCardsList
+                        canDelete={!isProject}
+                        units_list={kts.units_list ?? []}
+                    />
+                    <ItemCardsList
+                        canDelete={!isProject}
+                        items_list={kts.items_list ?? []}
+                    />
                 </>
             )}
         </Card>
