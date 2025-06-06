@@ -3,12 +3,15 @@ import { useGetCatalogKtsQuery } from "../../redux/services/catalogApi";
 import Loader from "../../components/Loader/Loader";
 import KtsCardsList from "../../components/KtsCardsList/KtsCardsList";
 import { PlusOutlined } from '@ant-design/icons';
+import AddKtsModal from "../../components/AddKtsModal/AddKtsModal";
+import { useState } from "react";
 
 const { Title } = Typography;
 
 const CatalogKtsPage: React.FC = () => {
 
     const { data: kts_list, isLoading, isError } = useGetCatalogKtsQuery();
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
     return (
         <>
@@ -17,6 +20,7 @@ const CatalogKtsPage: React.FC = () => {
                 <Button
                     type="primary"
                     icon={<PlusOutlined />}
+                    onClick={() => setIsModalOpen(true)}
                 />
             </div>
 
@@ -25,6 +29,11 @@ const CatalogKtsPage: React.FC = () => {
             ) : (
                 <KtsCardsList kts_list={kts_list ?? []} />
             )}
+
+            <AddKtsModal
+                isModalOpen={isModalOpen}
+                onCancel={() => setIsModalOpen(false)}
+            />
         </>
     );
 }
