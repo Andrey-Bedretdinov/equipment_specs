@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { IProject, IProjectCreate } from '../../types/types'
+import type { IAddElementsToProjects, IDeleteElementsFromProjects, IProject, IProjectCreate } from '../../types/types'
 
 const username = 'admin'
 const password = 'admin'
@@ -27,11 +27,37 @@ export const projectsApi = createApi({
       providesTags: ['Projects'],
     }),
 
+
     addProject: builder.mutation<IProject, IProjectCreate>({
       query: (newProject) => ({
         url: 'projects/',
         method: 'POST',
         body: newProject,
+      }),
+      invalidatesTags: ['Projects'],
+    }),
+    addElementsToProject: builder.mutation<IProject, {id:number }&IAddElementsToProjects>({
+      query: ({items, units, kts, id}) => ({
+        url: `projects/${id}/add_elements/`,
+        method: 'POST',
+        body: {items, units, kts},
+      }),
+      invalidatesTags: ['Projects'],
+    }),
+
+
+    deleteProject: builder.mutation<void, number>({
+      query: (id: number) => ({
+        url: `projects/${id}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Projects'],
+    }),
+    deleteElementsFromProject: builder.mutation<IProject, {project_id:string}&IDeleteElementsFromProjects>({
+      query: ({project_id, items, units, kts}) => ({
+        url: `projects/${project_id}/`,
+        method: 'PUT',
+        body: {items, units, kts}
       }),
       invalidatesTags: ['Projects'],
     }),
@@ -42,4 +68,7 @@ export const {
   useGetProjectsQuery,
   useGetProjectByIdQuery,
   useAddProjectMutation,
+  useDeleteProjectMutation,
+  useAddElementsToProjectMutation,
+  useDeleteElementsFromProjectMutation,
 } = projectsApi

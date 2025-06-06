@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Input, Tabs } from 'antd';
-import type { IAddElementsToProjects } from '../../types/types';
+import type { IAddOrDeleteElementsToProjects } from '../../types/types';
 import {
     useGetCatalogItemsQuery,
     useGetCatalogUnitsQuery,
@@ -10,6 +10,7 @@ import CatalogItemCard from '../CatalogItemCard/CatalogItemCard';
 import CatalogUnitCard from '../CatalogUnitCard/CatalogUnitCard';
 import CatalogKtsCard from '../CatalogKtsCard/CatalogKtsCard';
 import Loader from '../Loader/Loader';
+import { useAddElementsToProjectMutation } from '../../redux/services/projectsApi';
 
 interface AddElementsModalProps {
     isModalOpen: boolean;
@@ -22,16 +23,17 @@ type ITab = 'items' | 'units' | 'kts';
 const AddElementsToProjectModal: React.FC<AddElementsModalProps> = ({
     isModalOpen,
     onCancel,
-    projectId,
+    projectId
 }) => {
-    const [selectedItems, setSelectedItems] = useState<{ id: number; quantity: number }[]>([]);
-    const [selectedUnits, setSelectedUnits] = useState<{ id: number; quantity: number }[]>([]);
-    const [selectedKts, setSelectedKts] = useState<{ id: number; quantity: number }[]>([]);
+    const [selectedItems, setSelectedItems] = useState<{ item_id: number; quantity: number }[]>([]);
+    const [selectedUnits, setSelectedUnits] = useState<{ unit_id: number; quantity: number }[]>([]);
+    const [selectedKts, setSelectedKts] = useState<{ kts_id: number; quantity: number }[]>([]);
     const [activeTab, setActiveTab] = useState<ITab>('items');
 
     const { data: items, isError: isItemsError, isLoading: isItemsLoading } = useGetCatalogItemsQuery();
     const { data: units, isError: isUnitsError, isLoading: isUnitsLoading } = useGetCatalogUnitsQuery();
     const { data: kts, isError: isKtsError, isLoading: isKtsLoading } = useGetCatalogKtsQuery();
+    const [addElementsToProject] = useAddElementsToProjectMutation();
 
     const handleOk = async () => {
         if (selectedItems.length === 0 && selectedUnits.length === 0 && selectedKts.length === 0) {
@@ -40,13 +42,12 @@ const AddElementsToProjectModal: React.FC<AddElementsModalProps> = ({
         }
 
         try {
-            const postData: IAddElementsToProjects = {
-                id: projectId,
+            const postData: IAddOrDeleteElementsToProjects = {
                 items: selectedItems,
                 units: selectedUnits,
                 kts: selectedKts,
             };
-            console.log(postData);
+            addElementsToProject({id: projectId, ...postData})
             setSelectedItems([]);
             setSelectedUnits([]);
             setSelectedKts([]);
@@ -57,44 +58,63 @@ const AddElementsToProjectModal: React.FC<AddElementsModalProps> = ({
     };
 
     const toggleSelection = (id: number, type: ITab) => {
-        const [setFunc, list] = (() => {
-            switch (type) {
-                case 'items': return [setSelectedItems, selectedItems] as const;
-                case 'units': return [setSelectedUnits, selectedUnits] as const;
-                case 'kts': return [setSelectedKts, selectedKts] as const;
-            }
-        })();
-
-        const updated = list.some((el) => el.id === id)
-            ? list.filter((el) => el.id !== id)
-            : [...list, { id, quantity: 1 }];
-
-        setFunc(updated);
+        switch (type) {
+            case 'items':
+                setSelectedItems(prev =>
+                    prev.some(el => el.item_id === id)
+                        ? prev.filter(el => el.item_id !== id)
+                        : [...prev, { item_id: id, quantity: 1 }]
+                );
+                break;
+            case 'units':
+                setSelectedUnits(prev =>
+                    prev.some(el => el.unit_id === id)
+                        ? prev.filter(el => el.unit_id !== id)
+                        : [...prev, { unit_id: id, quantity: 1 }]
+                );
+                break;
+            case 'kts':
+                setSelectedKts(prev =>
+                    prev.some(el => el.kts_id === id)
+                        ? prev.filter(el => el.kts_id !== id)
+                        : [...prev, { kts_id: id, quantity: 1 }]
+                );
+                break;
+        }
     };
 
     const changeQuantity = (id: number, quantity: number, type: ITab) => {
         if (quantity < 1) return;
-        const [setFunc, list] = (() => {
-            switch (type) {
-                case 'items': return [setSelectedItems, selectedItems] as const;
-                case 'units': return [setSelectedUnits, selectedUnits] as const;
-                case 'kts': return [setSelectedKts, selectedKts] as const;
-            }
-        })();
-
-        setFunc(list.map((el) => (el.id === id ? { ...el, quantity } : el)));
+        switch (type) {
+            case 'items':
+                setSelectedItems(prev =>
+                    prev.map(el => (el.item_id === id ? { ...el, quantity } : el))
+                );
+                break;
+            case 'units':
+                setSelectedUnits(prev =>
+                    prev.map(el => (el.unit_id === id ? { ...el, quantity } : el))
+                );
+                break;
+            case 'kts':
+                setSelectedKts(prev =>
+                    prev.map(el => (el.kts_id === id ? { ...el, quantity } : el))
+                );
+                break;
+        }
     };
 
     const renderSelectableList = <T extends { id: number }>(
         data: T[] | undefined,
-        selectedList: { id: number; quantity: number }[],
+        selectedList: { item_id?: number; unit_id?: number; kts_id?: number; quantity: number }[],
         type: ITab,
         renderCard: (item: T) => React.ReactNode,
         selectedColor: string
     ) => {
         return data?.map((item) => {
-            const isSelected = selectedList.some((el) => el.id === item.id);
-            const quantity = selectedList.find((el) => el.id === item.id)?.quantity || 1;
+            const itemIdKey = type === 'items' ? 'item_id' : type === 'units' ? 'unit_id' : 'kts_id';
+            const isSelected = selectedList.some((el) => el[itemIdKey] === item.id);
+            const quantity = selectedList.find((el) => el[itemIdKey] === item.id)?.quantity || 1;
 
             return (
                 <div

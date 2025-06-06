@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Button, Card, Descriptions, Typography } from 'antd';
 import { DownOutlined, RightOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { IItem } from '../../types/types';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 import styles from './ItemCard.module.css';
 import { useDeleteItemMutation } from '../../redux/services/catalogApi';
+import { useDeleteElementsFromProjectMutation } from '../../redux/services/projectsApi';
 
 
 const { Text } = Typography;
@@ -18,8 +19,10 @@ interface ItemCardProps {
 const ItemCard: React.FC<ItemCardProps> = ({ item, canDelete = true }) => {
 
     const [collapsed, setCollapsed] = useState<boolean>(true);
+    const { project_id } = useParams();
 
     const [deleteItem] = useDeleteItemMutation();
+    const [deleteItemFromProject] = useDeleteElementsFromProjectMutation();
 
     const location = useLocation();
     const isProject = location.pathname.startsWith('/project');
@@ -32,10 +35,15 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, canDelete = true }) => {
     };
 
     const handleDelete = () => {
-        if (isCatalogItemsPage) deleteItem(item.id)
-        else if (isCatalogUnitsPage) console.log('Удаление Итема из каталога юнитов')
-        else if (isCatalogKtsPage) console.log('Уделение Итема из каталога ктс')
-        else if (isProject) console.log('Удаление Итема из проекта')
+        if (isCatalogItemsPage) {
+            deleteItem(item.id)
+        } else if (isCatalogUnitsPage) {
+            console.log('Удаление Итема из каталога юнитов')
+        } else if (isCatalogKtsPage) {
+            console.log('Уделение Итема из каталога ктс')
+        } else if (isProject && project_id) {
+            deleteItemFromProject({ project_id: project_id, items: [{ item_id: item.id }] })
+        }
     }
 
     return (

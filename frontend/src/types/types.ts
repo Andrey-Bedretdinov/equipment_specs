@@ -70,8 +70,13 @@ export interface IAddUnitsAndItemsToKts {
 }
 
 export interface IAddElementsToProjects {
-  id: number;
-  items: { id: number, quantity: number }[]
-  units: { id: number, quantity: number }[]
-  kts: { id: number, quantity: number }[]
+  items: { item_id: number, quantity: number }[]
+  units: { unit_id: number, quantity: number }[]
+  kts: { kts_id: number, quantity: number }[]
+}
+
+export interface IDeleteElementsFromProjects {
+  items?: { item_id: number }[]
+  units?: { unit_id: number }[]
+  kts?: { kts_id: number }[]
 }
