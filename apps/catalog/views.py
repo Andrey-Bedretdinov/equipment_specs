@@ -9,6 +9,7 @@ from .serializers import (
     CatalogItemSerializer, CatalogItemCreateSerializer,
     CatalogUnitSerializer,
     CatalogKTSSerializer, CatalogUnitCreateUpdateSerializer, AddItemsToUnitSerializer, CatalogUnitItemSerializer,
+    CatalogKTSCreateSerializer,
 )
 
 
@@ -118,8 +119,18 @@ class CatalogUnitViewSet(viewsets.ModelViewSet):
         summary="Получить КТС",
         description="Возвращает подробную информацию о КТС по ID."
     ),
+    create=extend_schema(
+        summary="Создать КТС",
+        description="Создаёт новый КТС.",
+        request=CatalogKTSCreateSerializer,
+        responses={201: CatalogKTSSerializer}
+    ),
 )
-class CatalogKTSViewSet(viewsets.ReadOnlyModelViewSet):
+class CatalogKTSViewSet(viewsets.ModelViewSet):
     queryset = CatalogKTS.objects.all()
     permission_classes = [AllowAny]
-    serializer_class = CatalogKTSSerializer
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CatalogKTSCreateSerializer
+        return CatalogKTSSerializer
