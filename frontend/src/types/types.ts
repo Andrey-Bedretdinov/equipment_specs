@@ -52,3 +52,9 @@ export interface IAddItemToUnit {
   id: number;
   items: { id: number, quantity: number }[]
 }
+
+export interface IAddUnitsAndItemsToKts {
+  id: number;
+  items: { id: number, quantity: number }[]
+  units: { id: number, quantity: number }[]
+}
