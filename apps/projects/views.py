@@ -4,8 +4,9 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import Project
-from .serializers import ProjectSerializer, ProjectShortSerializer, ProjectCreateSerializer
+from .models import Project, ProjectItem, ProjectUnit, ProjectKTS
+from .serializers import ProjectSerializer, ProjectShortSerializer, ProjectCreateSerializer, ProjectElementsSerializer
+from ..catalog.models import CatalogItem, CatalogUnit, CatalogKTS
 
 
 @extend_schema_view(
@@ -67,6 +68,109 @@ class ProjectViewSet(
         read_serializer = ProjectSerializer(serializer.instance, context=self.get_serializer_context())
         headers = self.get_success_headers(read_serializer.data)
         return Response(read_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    # ——— POST /projects/{id}/  →  «ADD» ———
+    @extend_schema(
+        summary="Добавить объекты в проект",
+        request=ProjectElementsSerializer,
+        responses={200: ProjectSerializer},
+        methods=["POST"],
+    )
+    def post(self, request, pk=None, *args, **kwargs):
+        project = self.get_object()
+        ser = ProjectElementsSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        v = ser.validated_data
+
+        for obj in v.get("items", []):
+            ProjectItem.objects.create(
+                project=project,
+                item=CatalogItem.objects.get(id=obj["item_id"]),
+                quantity=obj.get("quantity", 1),
+            )
+
+        for obj in v.get("units", []):
+            ProjectUnit.objects.create(
+                project=project,
+                unit=CatalogUnit.objects.get(id=obj["unit_id"]),
+                quantity=obj.get("quantity", 1),
+            )
+
+        for obj in v.get("kts", []):
+            ProjectKTS.objects.create(
+                project=project,
+                kts=CatalogKTS.objects.get(id=obj["kts_id"]),
+                quantity=obj.get("quantity", 1),
+            )
+
+        return Response(ProjectSerializer(project).data)
+
+    # ——— PATCH /projects/{id}/  →  «UPDATE quantity» ———
+    @extend_schema(
+        summary="Изменить количество объектов в проекте",
+        request=ProjectElementsSerializer,
+        responses={200: ProjectSerializer},
+        methods=["PATCH"],
+    )
+    def patch(self, request, pk=None, *args, **kwargs):
+        project = self.get_object()
+        ser = ProjectElementsSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        v = ser.validated_data
+
+        def _update(qs, id_field, obj_key):
+            for o in v.get(obj_key, []):
+                inst = qs.get(**{id_field: o[f"{obj_key[:-1]}_id"]})
+                inst.quantity = o["quantity"]
+                inst.save()
+
+        _update(ProjectItem.objects.filter(project=project), "item_id", "items")
+        _update(ProjectUnit.objects.filter(project=project), "unit_id", "units")
+        _update(ProjectKTS.objects.filter(project=project), "kts_id", "kts")
+
+        return Response(ProjectSerializer(project).data)
+
+    # ---------- PUT  /projects/{id}/  → удалить элементы ----------
+    @extend_schema(
+        summary="Удалить указанные элементы из проекта",
+        request=ProjectElementsSerializer,
+        responses={200: ProjectSerializer},
+        methods=["PUT"],
+    )
+    def put(self, request, pk=None, *args, **kwargs):
+        project = self.get_object()
+        ser = ProjectElementsSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        v = ser.validated_data
+
+        # items
+        if "items" in v:
+            ids = [o["item_id"] for o in v["items"]]
+            ProjectItem.objects.filter(project=project, item_id__in=ids).delete()
+
+        # units
+        if "units" in v:
+            ids = [o["unit_id"] for o in v["units"]]
+            ProjectUnit.objects.filter(project=project, unit_id__in=ids).delete()
+
+        # kts
+        if "kts" in v:
+            ids = [o["kts_id"] for o in v["kts"]]
+            ProjectKTS.objects.filter(project=project, kts_id__in=ids).delete()
+
+        return Response(ProjectSerializer(project).data)
+
+    # ---------- DELETE  /projects/{id}/  → удалить проект ----------
+    @extend_schema(
+        summary="Удалить проект",
+        request=ProjectElementsSerializer,
+        responses={200: ProjectSerializer, 204: None},
+        methods=["DELETE"],
+    )
+    def delete(self, request, pk=None, *args, **kwargs):
+        project = self.get_object()
+        self.perform_destroy(project)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @extend_schema(

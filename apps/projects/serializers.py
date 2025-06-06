@@ -228,3 +228,27 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ["name", "description"]
+
+
+class ProjectElementsSerializer(serializers.Serializer):
+    """
+    общий формат тела для add-elements / update-elements / remove-elements
+    передаём ТОЛЬКО то, с чем хотим работать
+    """
+    items = serializers.ListField(
+        child=serializers.DictField(child=serializers.IntegerField()),
+        required=False  # поле можно опустить
+    )
+    units = serializers.ListField(
+        child=serializers.DictField(child=serializers.IntegerField()),
+        required=False
+    )
+    kts = serializers.ListField(
+        child=serializers.DictField(child=serializers.IntegerField()),
+        required=False
+    )
+
+    def validate(self, data):
+        if not any(key in data for key in ("items", "units", "kts")):
+            raise serializers.ValidationError("нужно передать items, units и/или kts")
+        return data
